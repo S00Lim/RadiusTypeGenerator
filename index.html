@@ -471,8 +471,7 @@
       ui.acidityLabel = document.getElementById('acidityLabel');
       ui.tanninLabel = document.getElementById('tanninLabel');
       ui.drynessLabel = document.getElementById('drynessLabel');
-      ui.summaryLine1 = document.getElementById('summaryLine1');
-      ui.summaryLine2 = document.getElementById('summaryLine2');
+
       ui.orderBtn = document.getElementById('orderBtn');
       ui.saveBtn = document.getElementById('saveBtn');
       ui.typeColorPicker = document.getElementById('typeColorPicker');
@@ -618,8 +617,7 @@
       ui.drynessRange.value = state.dryness;
       ui.drynessLabel.textContent = state.drynessAutoLabel ? 'DRYNESS: AUTO' : `DRYNESS: ${state.dryness}`;
 
-      ui.summaryLine1.textContent = `BODY ${state.body} · ACIDITY ${state.acidity} · TANNIN ${state.tannin} · DRYNESS ${state.drynessAutoLabel ? 'AUTO' : state.dryness}`;
-      ui.summaryLine2.textContent = `Motion: ${state.autoMotion ? getActiveMotionNames().join(', ') : 'Off'}`;
+
 
       document.documentElement.style.setProperty('--bg', getBackgroundHex());
       document.documentElement.style.setProperty('--fg', needsDarkForeground() ? '#000' : '#fff');
