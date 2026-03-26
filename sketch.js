@@ -92,6 +92,21 @@ let bgColorPicker;
 
 let draggingSliderKey = null;
 
+
+
+// =========================
+// DEVICE DETECTION
+// =========================
+let FORCE_MOBILE = false; // 필요할 때만 true
+
+function isMobileLayout() {
+  if (FORCE_MOBILE) return true;
+
+  const ua = navigator.userAgent;
+  return /Mobi|Android|iPhone|iPad/i.test(ua);
+}
+
+
 // =========================
 // PRELOAD
 // =========================
@@ -171,14 +186,25 @@ function clearUIRegions(bgCol) {
   noStroke();
   fill(bgCol);
 
-  // top sliders / labels
-  rect(0, 0, width, sy(96));
+  if (isMobileLayout()) {
 
-  // left control panel
-  rect(0, sy(500), sx(270), height - sy(500));
+    // 상단 슬라이더 영역
+    rect(0, 0, width, sy(380));
 
-  // bottom description
-  rect(sx(600), sy(1006), ss(760), ss(52));
+    // 왼쪽 UI 영역
+    rect(0, 0, sx(320), height);
+
+    // 하단 텍스트
+    rect(0, height - ss(80), width, ss(80));
+
+  } else {
+
+    // 기존 데스크탑 유지
+    rect(0, 0, width, sy(96));
+    rect(0, sy(500), sx(270), height - sy(500));
+    rect(sx(600), sy(1006), ss(760), ss(52));
+
+  }
 }
 
 // =========================
@@ -612,6 +638,41 @@ function getActiveMotionNames() {
 // DOM POSITIONING
 // =========================
 function positionDOM() {
+  
+   if (isMobileLayout()) {
+    // 모바일
+    textInput.position(sx(40), sy(430));
+    textInput.size(ss(260), ss(30));
+  } else {
+    // 데스크탑 (기존 유지)
+    textInput.position(sx(35.6415), sy(528));
+    textInput.size(ss(142.5), ss(30));
+  }
+
+  textInput.style("font-size", `${max(12, ss(16))}px`);
+  textInput.style("font-family", "Apple SD Gothic Neo, sans-serif");
+  textInput.style("background", "transparent");
+  textInput.style("color", bgIsLight() ? "#111" : "#fff");
+  textInput.style("border", "none");
+  textInput.style("outline", "none");
+  textInput.style("z-index", "20");
+
+  textInput.elt.style.position = "absolute";
+
+  // 👉 컬러피커도 같이 분기 (안하면 위치 틀어짐)
+
+  if (isMobileLayout()) {
+    typeColorPicker.position(sx(100), sy(580));
+    bgColorPicker.position(sx(100), sy(640));
+  } else {
+    typeColorPicker.position(sx(99), sy(662));
+    bgColorPicker.position(sx(99), sy(722));
+  }
+
+  typeColorPicker.style("opacity", "0");
+  bgColorPicker.style("opacity", "0");
+  
+  
 textInput.position(sx(35.6415), sy(528));
 textInput.size(ss(142.5), ss(30));
 
