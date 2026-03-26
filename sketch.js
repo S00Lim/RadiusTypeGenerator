@@ -92,20 +92,13 @@ let bgColorPicker;
 
 let draggingSliderKey = null;
 
-
-
 // =========================
-// DEVICE DETECTION
+// MOBILE DETECTION
 // =========================
-let FORCE_MOBILE = false; // 필요할 때만 true
-
 function isMobileLayout() {
-  if (FORCE_MOBILE) return true;
-
-  const ua = navigator.userAgent;
-  return /Mobi|Android|iPhone|iPad/i.test(ua);
+  const ua = navigator.userAgent || "";
+  return /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
 }
-
 
 // =========================
 // PRELOAD
@@ -163,7 +156,6 @@ function draw() {
   const bgHex = getCurrentBgColor();
   const bgCol = color(bgHex);
 
-  // 생성 타입용 배경 / trail
   if (autoMotionOn && trailOn) {
     noStroke();
     fill(red(bgCol), green(bgCol), blue(bgCol), trailAlpha);
@@ -172,39 +164,12 @@ function draw() {
     background(bgCol);
   }
 
-  // 생성 타입 먼저
   renderGeneratedType(bgCol);
 
-  // UI는 항상 깨끗하게, blend/trail 영향 없이 마지막에
   blendMode(BLEND);
   clearUIRegions(bgCol);
   drawUI();
   positionDOM();
-}
-
-function clearUIRegions(bgCol) {
-  noStroke();
-  fill(bgCol);
-
-  if (isMobileLayout()) {
-
-    // 상단 슬라이더 영역
-    rect(0, 0, width, sy(380));
-
-    // 왼쪽 UI 영역
-    rect(0, 0, sx(320), height);
-
-    // 하단 텍스트
-    rect(0, height - ss(80), width, ss(80));
-
-  } else {
-
-    // 기존 데스크탑 유지
-    rect(0, 0, width, sy(96));
-    rect(0, sy(500), sx(270), height - sy(500));
-    rect(sx(600), sy(1006), ss(760), ss(52));
-
-  }
 }
 
 // =========================
@@ -226,6 +191,226 @@ function sy(y) {
 
 function ss(v) {
   return v * uiScale;
+}
+
+// =========================
+// MOBILE UI DATA
+// =========================
+function getMobileStackStartY() {
+  return 150;
+}
+
+function getMobileTextPanelStartY() {
+  return 430;
+}
+
+function getMobileTopSliders() {
+  const x = 40;
+  const w = 260;
+  const h = 12;
+  const labelGap = 18;
+  const rowGap = 72;
+
+  return [
+    {
+      key: "body",
+      label: "BODY",
+      value: body,
+      min: 0,
+      max: 100,
+      x,
+      y: getMobileStackStartY() + 20,
+      w,
+      h,
+      titleX: x,
+      titleY: getMobileStackStartY(),
+      leftLabel: "Light",
+      rightLabel: "Bold",
+      leftX: x,
+      rightX: x + w + 16,
+      subY: getMobileStackStartY() + labelGap,
+      disabled: false
+    },
+    {
+      key: "acidity",
+      label: "ACIDITY",
+      value: acidity,
+      min: 0,
+      max: 100,
+      x,
+      y: getMobileStackStartY() + rowGap + 20,
+      w,
+      h,
+      titleX: x,
+      titleY: getMobileStackStartY() + rowGap,
+      leftLabel: "Soft",
+      rightLabel: "Crisp",
+      leftX: x,
+      rightX: x + w + 16,
+      subY: getMobileStackStartY() + rowGap + labelGap,
+      disabled: false
+    },
+    {
+      key: "tannin",
+      label: "TANNIN",
+      value: tannin,
+      min: 0,
+      max: 100,
+      x,
+      y: getMobileStackStartY() + rowGap * 2 + 20,
+      w,
+      h,
+      titleX: x,
+      titleY: getMobileStackStartY() + rowGap * 2,
+      leftLabel: "Smooth",
+      rightLabel: "Gritty",
+      leftX: x,
+      rightX: x + w + 16,
+      subY: getMobileStackStartY() + rowGap * 2 + labelGap,
+      disabled: false
+    },
+    {
+      key: "dryness",
+      label: "DRYNESS",
+      value: dryness,
+      min: 0,
+      max: 100,
+      x,
+      y: getMobileStackStartY() + rowGap * 3 + 20,
+      w,
+      h,
+      titleX: x,
+      titleY: getMobileStackStartY() + rowGap * 3,
+      leftLabel: "Juicy",
+      rightLabel: "Tight",
+      leftX: x,
+      rightX: x + w + 16,
+      subY: getMobileStackStartY() + rowGap * 3 + labelGap,
+      disabled: true
+    }
+  ];
+}
+
+function getDesktopTopSliders() {
+  return [
+    {
+      key: "body",
+      label: "BODY",
+      value: body,
+      min: 0,
+      max: 100,
+      x: 81.7117,
+      y: 56.303,
+      w: 143.4212,
+      h: 12.7641,
+      titleX: 32.9917,
+      titleY: 46.4554,
+      leftLabel: "Light",
+      rightLabel: "Bold",
+      leftX: 32.9917,
+      rightX: 234.9685,
+      subY: 67.788,
+      disabled: false
+    },
+    {
+      key: "acidity",
+      label: "ACIDITY",
+      value: acidity,
+      min: 0,
+      max: 100,
+      x: 370.9175,
+      y: 56.303,
+      w: 143.4212,
+      h: 12.7641,
+      titleX: 329.5955,
+      titleY: 46.4554,
+      leftLabel: "Soft",
+      rightLabel: "Crisp",
+      leftX: 329.5955,
+      rightX: 523.1283,
+      subY: 67.788,
+      disabled: false
+    },
+    {
+      key: "tannin",
+      label: "TANNIN",
+      value: tannin,
+      min: 0,
+      max: 100,
+      x: 690.3051,
+      y: 56.303,
+      w: 143.4212,
+      h: 12.7641,
+      titleX: 621.317,
+      titleY: 46.4554,
+      leftLabel: "Smooth",
+      rightLabel: "Gritty",
+      leftX: 621.317,
+      rightX: 842.1219,
+      subY: 67.788,
+      disabled: false
+    },
+    {
+      key: "dryness",
+      label: "DRYNESS",
+      value: dryness,
+      min: 0,
+      max: 100,
+      x: 997.1866,
+      y: 56.303,
+      w: 143.4212,
+      h: 12.7641,
+      titleX: 946.7922,
+      titleY: 46.4554,
+      leftLabel: "Juicy",
+      rightLabel: "Tight",
+      leftX: 948.2322,
+      rightX: 1149.0034,
+      subY: 67.788,
+      disabled: true
+    }
+  ];
+}
+
+function getTopSliders() {
+  return isMobileLayout() ? getMobileTopSliders() : getDesktopTopSliders();
+}
+
+function getDesktopColorItems(group) {
+  return group === "type"
+    ? [
+        { x: 42.52, y: 670.7034, mode: "White" },
+        { x: 64.398, y: 670.7034, mode: "Black" },
+        { x: 86.276, y: 670.7034, mode: "Neon" },
+        { x: 108.1539, y: 670.7034, mode: "Custom" }
+      ]
+    : [
+        { x: 42.52, y: 730.5593, mode: "White" },
+        { x: 64.398, y: 730.5593, mode: "Black" },
+        { x: 86.276, y: 730.5593, mode: "Brand" },
+        { x: 108.1539, y: 730.5593, mode: "Custom" }
+      ];
+}
+
+function getMobileColorItems(group) {
+  const y = group === "type" ? getMobileTextPanelStartY() + 142 : getMobileTextPanelStartY() + 202;
+  return group === "type"
+    ? [
+        { x: 40, y, mode: "White" },
+        { x: 68, y, mode: "Black" },
+        { x: 96, y, mode: "Neon" },
+        { x: 124, y, mode: "Custom" }
+      ]
+    : [
+        { x: 40, y, mode: "White" },
+        { x: 68, y, mode: "Black" },
+        { x: 96, y, mode: "Brand" },
+        { x: 124, y, mode: "Custom" }
+      ];
+}
+
+function getColorItems(group) {
+  return isMobileLayout() ? getMobileColorItems(group) : getDesktopColorItems(group);
 }
 
 // =========================
@@ -283,87 +468,24 @@ function getTypeBaseColor() {
     const c = color(typeCustomColor);
     return [red(c), green(c), blue(c)];
   }
-  return null; // Neon handled separately
+  return null;
 }
 
 // =========================
-// UI MODEL
+// UI REGION CLEAR
 // =========================
-function getTopSliders() {
-  return [
-    {
-      key: "body",
-      label: "BODY",
-      value: body,
-      min: 0,
-      max: 100,
-      x: 81.7117,
-      y: 56.303,
-      w: 143.4212,
-      h: 12.7641,
-      titleX: 32.9917,
-      titleY: 46.4554,
-      leftLabel: "Light",
-      rightLabel: "Bold",
-      leftX: 32.9917,
-      rightX: 234.9685,
-      disabled: false
-    },
-    {
-      key: "acidity",
-      label: "ACIDITY",
-      value: acidity,
-      min: 0,
-      max: 100,
-      x: 370.9175,
-      y: 56.303,
-      w: 143.4212,
-      h: 12.7641,
-      titleX: 329.5955,
-      titleY: 46.4554,
-      leftLabel: "Soft",
-      rightLabel: "Crisp",
-      leftX: 329.5955,
-      rightX: 523.1283,
-      disabled: false
-    },
-    {
-      key: "tannin",
-      label: "TANNIN",
-      value: tannin,
-      min: 0,
-      max: 100,
-      x: 690.3051,
-      y: 56.303,
-      w: 143.4212,
-      h: 12.7641,
-      titleX: 621.317,
-      titleY: 46.4554,
-      leftLabel: "Smooth",
-      rightLabel: "Gritty",
-      leftX: 621.317,
-      rightX: 842.1219,
-      disabled: false
-    },
-    {
-      key: "dryness",
-      label: "DRYNESS",
-      value: dryness,
-      min: 0,
-      max: 100,
-      x: 997.1866,
-      y: 56.303,
-      w: 143.4212,
-      h: 12.7641,
-      titleX: 946.7922,
-      titleY: 46.4554,
-      leftLabel: "Juicy",
-      rightLabel: "Tight",
-      leftX: 948.2322,
-      rightX: 1149.0034,
-      disabled: true
-    }
-  ];
+function clearUIRegions(bgCol) {
+  noStroke();
+  fill(bgCol);
+
+  if (isMobileLayout()) {
+    rect(0, 0, sx(380), height);
+    rect(0, height - ss(80), width, ss(80));
+  } else {
+    rect(0, 0, width, sy(96));
+    rect(0, sy(500), sx(270), height - sy(500));
+    rect(sx(600), sy(1006), ss(760), ss(52));
+  }
 }
 
 // =========================
@@ -403,8 +525,8 @@ function drawTopAxisUI(uiText, subText, barBg) {
     fill(subText);
     textStyle(NORMAL);
     textSize(ss(16));
-    text(s.leftLabel, sx(s.leftX), sy(67.788));
-    text(s.rightLabel, sx(s.rightX), sy(67.788));
+    text(s.leftLabel, sx(s.leftX), sy(s.subY));
+    text(s.rightLabel, sx(s.rightX), sy(s.subY));
 
     noStroke();
     fill(barBg);
@@ -426,6 +548,70 @@ function drawTopAxisUI(uiText, subText, barBg) {
 
 function drawLeftPanel(uiText, subText, outline) {
   textFont("Apple SD Gothic Neo");
+
+  if (isMobileLayout()) {
+    const startY = getMobileTextPanelStartY();
+
+    noStroke();
+    fill(uiText);
+    textAlign(LEFT, BASELINE);
+    textStyle(BOLD);
+    textSize(ss(16));
+    text("TEXT", sx(40), sy(startY));
+
+    stroke(outline);
+    strokeWeight(ss(1.0537));
+    line(sx(40), sy(startY + 26), sx(300), sy(startY + 26));
+
+    noStroke();
+    fill(uiText);
+    textStyle(BOLD);
+    textSize(ss(16));
+    text("SIZE", sx(40), sy(startY + 70));
+
+    fill(getBarBgColor());
+    rect(sx(40), sy(startY + 82), ss(260), ss(12.7641), ss(6.3821));
+
+    fill(getPointerColor());
+    const sizeKnobInset = 6.0002;
+    const sizeKnobX = sx(40 + map(textSizeVal, 60, 1200, sizeKnobInset, 260 - sizeKnobInset));
+    circle(sizeKnobX, sy(startY + 88.382), ss(12.0004));
+
+    noStroke();
+    fill(uiText);
+    textStyle(BOLD);
+    textSize(ss(16));
+    text("TYPE COLOR", sx(40), sy(startY + 130));
+    drawColorOptions("type");
+
+    noStroke();
+    fill(uiText);
+    textStyle(BOLD);
+    textSize(ss(16));
+    text("BACKGROUND", sx(40), sy(startY + 190));
+    drawColorOptions("bg");
+
+    noStroke();
+    fill(uiText);
+    textStyle(BOLD);
+    textSize(ss(16));
+    text("AUTO MOTION", sx(40), sy(startY + 250));
+    drawRadio(42, startY + 266, autoMotionOn, "On", 60, startY + 271, uiText, subText);
+    drawRadio(42, startY + 292, !autoMotionOn, "Off", 60, startY + 297, uiText, subText);
+
+    noStroke();
+    fill(uiText);
+    textStyle(BOLD);
+    textSize(ss(16));
+    text("BLEND MODE", sx(40), sy(startY + 338));
+    drawRadio(42, startY + 354, blendModeName === "Normal", "Normal", 60, startY + 359, uiText, subText);
+    drawRadio(42, startY + 380, blendModeName === "Screen", "Screen", 60, startY + 385, uiText, subText);
+
+    drawButton(40, startY + 430, 120, 34, "SAVE", uiText, false);
+    drawButton(40, startY + 474, 120, 34, "ORDER", uiText, false);
+
+    return;
+  }
 
   noStroke();
   fill(uiText);
@@ -457,14 +643,14 @@ function drawLeftPanel(uiText, subText, outline) {
   textStyle(BOLD);
   textSize(ss(16));
   text("TYPE COLOR", sx(35.7025), sy(654.9246));
-  drawColorOptions(665.0, typeColorMode, "type");
+  drawColorOptions("type");
 
   noStroke();
   fill(uiText);
   textStyle(BOLD);
   textSize(ss(16));
   text("BACKGROUND", sx(35.7025), sy(714.7829));
-  drawColorOptions(725.0, bgMode, "bg");
+  drawColorOptions("bg");
 
   noStroke();
   fill(uiText);
@@ -486,27 +672,14 @@ function drawLeftPanel(uiText, subText, outline) {
   drawButton(35.702, 1013.7338, 95.0218, 30.5844, "ORDER", uiText, false);
 }
 
-function drawColorOptions(baseY, selectedMode, group) {
+function drawColorOptions(group) {
   const uiText = getUITextColor();
   const border = getBorderGray();
-
-  const items = group === "type"
-    ? [
-        { x: 42.52, mode: "White" },
-        { x: 64.398, mode: "Black" },
-        { x: 86.276, mode: "Neon" },
-        { x: 108.1539, mode: "Custom" }
-      ]
-    : [
-        { x: 42.52, mode: "White" },
-        { x: 64.398, mode: "Black" },
-        { x: 86.276, mode: "Brand" },
-        { x: 108.1539, mode: "Custom" }
-      ];
+  const items = getColorItems(group);
 
   for (const item of items) {
     const cx = sx(item.x);
-    const cy = sy(baseY + 5.7034);
+    const cy = sy(item.y);
     const r = ss(6.0002);
 
     if (item.mode === "White") {
@@ -514,28 +687,28 @@ function drawColorOptions(baseY, selectedMode, group) {
       strokeWeight(ss(1));
       fill(255);
       circle(cx, cy, r * 2);
-
     } else if (item.mode === "Black") {
       noStroke();
       fill(0);
       circle(cx, cy, r * 2);
-
     } else if (item.mode === "Neon") {
       noStroke();
       drawNeonSwatch(cx, cy, r);
-
     } else if (item.mode === "Brand") {
       stroke(border);
       strokeWeight(ss(1));
       fill("#8b1512");
       circle(cx, cy, r * 2);
-
     } else if (item.mode === "Custom") {
       noStroke();
       drawRainbowSwatch(cx, cy, r);
     }
 
-    if (selectedMode === item.mode) {
+    const selected = group === "type"
+      ? typeColorMode === item.mode
+      : bgMode === item.mode;
+
+    if (selected) {
       noFill();
       stroke(uiText);
       strokeWeight(ss(1.2));
@@ -618,8 +791,15 @@ function drawSummary(uiText) {
   textFont("Apple SD Gothic Neo");
   textStyle(NORMAL);
   textSize(ss(12));
-  text(line1, sx(960), sy(1023.7974));
-  text(line2, sx(960), sy(1038.1968));
+
+  if (isMobileLayout()) {
+    text(line1, sx(195), sy(786));
+    text(line2, sx(195), sy(802));
+  } else {
+    text(line1, sx(960), sy(1023.7974));
+    text(line2, sx(960), sy(1038.1968));
+  }
+
   textAlign(LEFT, BASELINE);
 }
 
@@ -638,68 +818,42 @@ function getActiveMotionNames() {
 // DOM POSITIONING
 // =========================
 function positionDOM() {
-  
-   if (isMobileLayout()) {
-    // 모바일
-    textInput.position(sx(40), sy(430));
-    textInput.size(ss(260), ss(30));
+  if (isMobileLayout()) {
+    textInput.position(sx(40), sy(getMobileTextPanelStartY() + 8));
+    textInput.size(ss(240), ss(28));
+
+    typeColorPicker.position(sx(118), sy(getMobileTextPanelStartY() + 134));
+    bgColorPicker.position(sx(118), sy(getMobileTextPanelStartY() + 194));
   } else {
-    // 데스크탑 (기존 유지)
     textInput.position(sx(35.6415), sy(528));
     textInput.size(ss(142.5), ss(30));
-  }
 
-  textInput.style("font-size", `${max(12, ss(16))}px`);
-  textInput.style("font-family", "Apple SD Gothic Neo, sans-serif");
-  textInput.style("background", "transparent");
-  textInput.style("color", bgIsLight() ? "#111" : "#fff");
-  textInput.style("border", "none");
-  textInput.style("outline", "none");
-  textInput.style("z-index", "20");
-
-  textInput.elt.style.position = "absolute";
-
-  // 👉 컬러피커도 같이 분기 (안하면 위치 틀어짐)
-
-  if (isMobileLayout()) {
-    typeColorPicker.position(sx(100), sy(580));
-    bgColorPicker.position(sx(100), sy(640));
-  } else {
     typeColorPicker.position(sx(99), sy(662));
     bgColorPicker.position(sx(99), sy(722));
   }
 
-  typeColorPicker.style("opacity", "0");
-  bgColorPicker.style("opacity", "0");
-  
-  
-textInput.position(sx(35.6415), sy(528));
-textInput.size(ss(142.5), ss(30));
+  textInput.style("font-size", `${max(12, ss(16))}px`);
+  textInput.style("font-family", "Apple SD Gothic Neo, sans-serif");
+  textInput.style("font-weight", "400");
+  textInput.style("background", "transparent");
+  textInput.style("color", bgIsLight() ? "#111111" : "#ffffff");
+  textInput.style("caret-color", bgIsLight() ? "#111111" : "#ffffff");
+  textInput.style("border", "none");
+  textInput.style("outline", "none");
+  textInput.style("padding", "0");
+  textInput.style("margin", "0");
+  textInput.style("line-height", "1");
+  textInput.style("z-index", "20");
+  textInput.style("pointer-events", "auto");
+  textInput.style("text-align", "left");
 
-textInput.style("font-size", `${max(12, ss(16))}px`);
-textInput.style("font-family", "Apple SD Gothic Neo, sans-serif");
-textInput.style("font-weight", "400");
-textInput.style("background", "transparent");
-textInput.style("color", bgIsLight() ? "#111111" : "#ffffff");
-textInput.style("caret-color", bgIsLight() ? "#111111" : "#ffffff");
-textInput.style("border", "none");
-textInput.style("outline", "none");
-textInput.style("padding", "0");
-textInput.style("margin", "0");
-textInput.style("line-height", "1");
-textInput.style("z-index", "20");
-textInput.style("pointer-events", "auto");
-textInput.style("text-align", "left");
+  textInput.elt.style.position = "absolute";
+  textInput.elt.style.backgroundColor = "transparent";
+  textInput.elt.style.boxShadow = "none";
+  textInput.elt.style.webkitAppearance = "none";
+  textInput.elt.style.appearance = "none";
 
-textInput.elt.style.position = "absolute";
-textInput.elt.style.backgroundColor = "transparent";
-textInput.elt.style.boxShadow = "none";
-textInput.elt.style.webkitAppearance = "none";
-textInput.elt.style.appearance = "none";
-
-  // type custom picker: 마지막 무지개 버튼 위에 항상 투명하게 겹침
   typeColorPicker.show();
-  typeColorPicker.position(sx(99), sy(662));
   typeColorPicker.size(ss(18), ss(18));
   typeColorPicker.style("opacity", "0");
   typeColorPicker.style("z-index", "40");
@@ -712,9 +866,7 @@ textInput.elt.style.appearance = "none";
   typeColorPicker.style("appearance", "none");
   typeColorPicker.style("-webkit-appearance", "none");
 
-  // bg custom picker: 마지막 무지개 버튼 위에 항상 투명하게 겹침
   bgColorPicker.show();
-  bgColorPicker.position(sx(99), sy(722));
   bgColorPicker.size(ss(18), ss(18));
   bgColorPicker.style("opacity", "0");
   bgColorPicker.style("z-index", "40");
@@ -939,7 +1091,7 @@ function centerAlignCenters() {
   }
 
   const targetCenterX = DESIGN_W * 0.5;
-  const targetCenterY = 540;
+  const targetCenterY = isMobileLayout() ? 500 : 540;
   const dx = targetCenterX - (minX + maxX) * 0.5;
   const dy = targetCenterY - (minY + maxY) * 0.5;
 
@@ -1029,6 +1181,7 @@ function drawRipple(pt, progress) {
     ellipse(sx(cx + dx), sy(cy + dy), ss(rr * 2), ss(rr * 2));
   }
 }
+
 function getRippleColor(t) {
   if (typeColorMode !== "Neon") return getTypeBaseColor();
 
@@ -1043,12 +1196,18 @@ function getRippleColor(t) {
 // MOUSE
 // =========================
 function mousePressed() {
-  
-  // text input area focus
-if (pointInRect(mouseX, mouseY, sx(35.6415), sy(528), ss(142.5), ss(30))) {
-  textInput.elt.focus();
-  return;
-}
+  if (isMobileLayout()) {
+    if (pointInRect(mouseX, mouseY, sx(40), sy(getMobileTextPanelStartY()), ss(260), ss(40))) {
+      textInput.elt.focus();
+      return;
+    }
+  } else {
+    if (pointInRect(mouseX, mouseY, sx(35.6415), sy(528), ss(142.5), ss(30))) {
+      textInput.elt.focus();
+      return;
+    }
+  }
+
   const sliders = getTopSliders();
 
   for (const s of sliders) {
@@ -1061,64 +1220,115 @@ if (pointInRect(mouseX, mouseY, sx(35.6415), sy(528), ss(142.5), ss(30))) {
     }
   }
 
-  // size slider
-  if (pointInRect(mouseX, mouseY, sx(35.6415) - ss(8), sy(603.88) - ss(10), ss(143.4212) + ss(16), ss(12.7641) + ss(20))) {
-    draggingSliderKey = "size";
-    updateSliderByMouse("size", mouseX);
-    return;
+  if (isMobileLayout()) {
+    if (pointInRect(mouseX, mouseY, sx(40) - ss(8), sy(getMobileTextPanelStartY() + 82) - ss(10), ss(260) + ss(16), ss(12.7641) + ss(20))) {
+      draggingSliderKey = "size";
+      updateSliderByMouse("size", mouseX);
+      return;
+    }
+  } else {
+    if (pointInRect(mouseX, mouseY, sx(35.6415) - ss(8), sy(603.88) - ss(10), ss(143.4212) + ss(16), ss(12.7641) + ss(20))) {
+      draggingSliderKey = "size";
+      updateSliderByMouse("size", mouseX);
+      return;
+    }
   }
 
   if (handleColorClick("type")) return;
   if (handleColorClick("bg")) return;
 
-  // auto motion circles
-  if (pointInCircle(mouseX, mouseY, sx(42.52), sy(790.1155), ss(10))) {
-    autoMotionOn = true;
-    applyAxesToParams();
-    return;
-  }
-  if (pointInCircle(mouseX, mouseY, sx(42.52), sy(814.1689), ss(10))) {
-    autoMotionOn = false;
-    applyAxesToParams();
-    return;
-  }
+  if (isMobileLayout()) {
+    const startY = getMobileTextPanelStartY();
 
-  // auto motion text
-  if (pointInRect(mouseX, mouseY, sx(57.7498), sy(782), ss(36), ss(18))) {
-    autoMotionOn = true;
-    applyAxesToParams();
-    return;
-  }
-  if (pointInRect(mouseX, mouseY, sx(57.7498), sy(806), ss(40), ss(18))) {
-    autoMotionOn = false;
-    applyAxesToParams();
-    return;
-  }
+    if (pointInCircle(mouseX, mouseY, sx(42), sy(startY + 266), ss(10))) {
+      autoMotionOn = true;
+      applyAxesToParams();
+      return;
+    }
+    if (pointInCircle(mouseX, mouseY, sx(42), sy(startY + 292), ss(10))) {
+      autoMotionOn = false;
+      applyAxesToParams();
+      return;
+    }
 
-  // blend circles
-  if (pointInCircle(mouseX, mouseY, sx(42.52), sy(874.8965), ss(10))) {
-    blendModeName = "Normal";
-    return;
-  }
-  if (pointInCircle(mouseX, mouseY, sx(42.52), sy(898.3548), ss(10))) {
-    blendModeName = "Screen";
-    return;
-  }
+    if (pointInRect(mouseX, mouseY, sx(60), sy(startY + 256), ss(50), ss(22))) {
+      autoMotionOn = true;
+      applyAxesToParams();
+      return;
+    }
+    if (pointInRect(mouseX, mouseY, sx(60), sy(startY + 282), ss(50), ss(22))) {
+      autoMotionOn = false;
+      applyAxesToParams();
+      return;
+    }
 
-  // blend text
-  if (pointInRect(mouseX, mouseY, sx(57.7498), sy(866), ss(56), ss(18))) {
-    blendModeName = "Normal";
-    return;
-  }
-  if (pointInRect(mouseX, mouseY, sx(57.7498), sy(890), ss(60), ss(18))) {
-    blendModeName = "Screen";
-    return;
-  }
+    if (pointInCircle(mouseX, mouseY, sx(42), sy(startY + 354), ss(10))) {
+      blendModeName = "Normal";
+      return;
+    }
+    if (pointInCircle(mouseX, mouseY, sx(42), sy(startY + 380), ss(10))) {
+      blendModeName = "Screen";
+      return;
+    }
 
-  // save
-  if (pointInRect(mouseX, mouseY, sx(35.702), sy(972.2339), ss(95.0218), ss(30.5844))) {
-    exportSVG();
-    return;
+    if (pointInRect(mouseX, mouseY, sx(60), sy(startY + 344), ss(70), ss(22))) {
+      blendModeName = "Normal";
+      return;
+    }
+    if (pointInRect(mouseX, mouseY, sx(60), sy(startY + 370), ss(70), ss(22))) {
+      blendModeName = "Screen";
+      return;
+    }
+
+    if (pointInRect(mouseX, mouseY, sx(40), sy(startY + 430), ss(120), ss(34))) {
+      exportSVG();
+      return;
+    }
+  } else {
+    if (pointInCircle(mouseX, mouseY, sx(42.52), sy(790.1155), ss(10))) {
+      autoMotionOn = true;
+      applyAxesToParams();
+      return;
+    }
+    if (pointInCircle(mouseX, mouseY, sx(42.52), sy(814.1689), ss(10))) {
+      autoMotionOn = false;
+      applyAxesToParams();
+      return;
+    }
+
+    if (pointInRect(mouseX, mouseY, sx(57.7498), sy(782), ss(36), ss(18))) {
+      autoMotionOn = true;
+      applyAxesToParams();
+      return;
+    }
+    if (pointInRect(mouseX, mouseY, sx(57.7498), sy(806), ss(40), ss(18))) {
+      autoMotionOn = false;
+      applyAxesToParams();
+      return;
+    }
+
+    if (pointInCircle(mouseX, mouseY, sx(42.52), sy(874.8965), ss(10))) {
+      blendModeName = "Normal";
+      return;
+    }
+    if (pointInCircle(mouseX, mouseY, sx(42.52), sy(898.3548), ss(10))) {
+      blendModeName = "Screen";
+      return;
+    }
+
+    if (pointInRect(mouseX, mouseY, sx(57.7498), sy(866), ss(56), ss(18))) {
+      blendModeName = "Normal";
+      return;
+    }
+    if (pointInRect(mouseX, mouseY, sx(57.7498), sy(890), ss(60), ss(18))) {
+      blendModeName = "Screen";
+      return;
+    }
+
+    if (pointInRect(mouseX, mouseY, sx(35.702), sy(972.2339), ss(95.0218), ss(30.5844))) {
+      exportSVG();
+      return;
+    }
   }
 }
 
@@ -1133,22 +1343,10 @@ function mouseReleased() {
 }
 
 function handleColorClick(group) {
-  const items = group === "type"
-    ? [
-        { x: 42.52, mode: "White" },
-        { x: 64.398, mode: "Black" },
-        { x: 86.276, mode: "Neon" }
-      ]
-    : [
-        { x: 42.52, mode: "White" },
-        { x: 64.398, mode: "Black" },
-        { x: 86.276, mode: "Brand" }
-      ];
-
-  const baseY = group === "type" ? 665.0 : 725.0;
+  const items = getColorItems(group);
 
   for (const item of items) {
-    if (pointInCircle(mouseX, mouseY, sx(item.x), sy(baseY + 5.7034), ss(9))) {
+    if (pointInCircle(mouseX, mouseY, sx(item.x), sy(item.y), ss(9))) {
       if (group === "type") {
         typeColorMode = item.mode;
       } else {
@@ -1163,8 +1361,13 @@ function handleColorClick(group) {
 
 function updateSliderByMouse(key, mx) {
   if (key === "size") {
-    let v = map(mx, sx(35.6415), sx(35.6415 + 143.4212), 60, 1200);
-    textSizeVal = constrain(v, 60, 1200);
+    if (isMobileLayout()) {
+      let v = map(mx, sx(40), sx(40 + 260), 60, 1200);
+      textSizeVal = constrain(v, 60, 1200);
+    } else {
+      let v = map(mx, sx(35.6415), sx(35.6415 + 143.4212), 60, 1200);
+      textSizeVal = constrain(v, 60, 1200);
+    }
     applyAxesToParams();
     buildAllText();
     return;
