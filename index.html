@@ -1,19 +1,1034 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.11/addons/p5.sound.min.js"></script>
-    
-    
-    
-    
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <meta charset="utf-8" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radius Bar Custom Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <style>
+    :root {
+      --bg: #8b1512;
+      --fg: #fff;
+      --muted: #cfcfcf;
+      --panel-w: 320px;
+      --ui-font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --slider-track: rgba(255,255,255,0.18);
+    }
 
-  </head>
-  <body>
-    <main>
-    </main>
-    <script src="sketch.js"></script>
-  </body>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--ui-font);
+    }
+
+    #app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg);
+    }
+
+    #canvasWrap, #uiLayer {
+      position: absolute;
+      inset: 0;
+    }
+
+    #uiLayer {
+      pointer-events: none;
+    }
+
+    .panel, .top-metrics, .buttons, .summary, .footer-copy {
+      position: absolute;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    .top-metrics {
+      left: 28px;
+      top: 28px;
+      display: flex;
+      gap: 56px;
+      align-items: flex-start;
+    }
+
+    .metric {
+      width: 235px;
+    }
+
+    .metric-title,
+    .panel-title,
+    .copy-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+    }
+
+    .metric-subrow {
+      display: flex;
+      justify-content: space-between;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .value-inline {
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--slider-track);
+      outline: none;
+      border: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--fg);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.25);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--fg);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.25);
+    }
+
+    .derived-slider {
+      opacity: 0.9;
+    }
+
+    .derived-slider::-webkit-slider-thumb {
+      background: #4a4a4a;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+      cursor: default;
+    }
+
+    .derived-slider::-moz-range-thumb {
+      background: #4a4a4a;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+      cursor: default;
+    }
+
+    .panel {
+      right: 34px;
+      top: 28px;
+      width: 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .panel-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .text-input {
+      width: 120px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--fg);
+      color: var(--fg);
+      font: 300 22px/1.15 var(--ui-font);
+      text-transform: uppercase;
+      outline: none;
+      padding: 2px 0 4px;
+    }
+
+    .swatches, .radio-list {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .swatch, .radio-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.8);
+      cursor: pointer;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .swatch.selected::after,
+    .radio-dot.selected::after {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.95);
+      mix-blend-mode: difference;
+    }
+
+    .swatch.white { background: #ffffff; }
+    .swatch.black { background: #000000; }
+    .swatch.brand { background: linear-gradient(180deg, #f239b6 0%, #50ffc8 100%); }
+    .swatch.redbg { background: #8b1512; }
+    .swatch.custom { background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); }
+
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .radio-dot {
+      background: transparent;
+    }
+
+    .radio-dot.selected {
+      background: var(--fg);
+    }
+
+    .radio-dot.selected::after {
+      display: none;
+    }
+
+    .buttons {
+      right: 36px;
+      bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pill-btn {
+      appearance: none;
+      border: 1px solid var(--fg);
+      background: transparent;
+      color: var(--fg);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font: 500 15px/1 var(--ui-font);
+      cursor: pointer;
+      min-width: 96px;
+      text-align: center;
+    }
+
+    .pill-btn:hover { background: rgba(255,255,255,0.08); }
+
+    .footer-copy {
+      left: 28px;
+      bottom: 28px;
+      font-size: 12px;
+      line-height: 1.35;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      max-width: 220px;
+    }
+
+    .summary {
+      left: 50%;
+      bottom: 38px;
+      transform: translateX(-50%);
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.45;
+      letter-spacing: 0.02em;
+      min-width: 360px;
+      color: var(--fg);
+    }
+
+    .summary-line-1,
+    .summary-line-2 {
+      white-space: nowrap;
+    }
+
+    .hidden-picker {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
+    }
+
+    .small-note {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: -4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="canvasWrap"></div>
+
+    <div id="uiLayer">
+      <div class="top-metrics">
+        <div class="metric">
+          <div class="metric-title"><span id="bodyLabel">BODY: 53</span></div>
+          <div class="metric-subrow"><span>Light</span><span>Bold</span></div>
+          <div class="range-wrap"><input id="bodyRange" type="range" min="0" max="100" value="53" /></div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-title"><span id="acidityLabel">ACIDITY: 27</span></div>
+          <div class="metric-subrow"><span>Soft</span><span>Crisp</span></div>
+          <div class="range-wrap"><input id="acidityRange" type="range" min="0" max="100" value="27" /></div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-title"><span id="tanninLabel">TANNIN: 55</span></div>
+          <div class="metric-subrow"><span>Smooth</span><span>Gritty</span></div>
+          <div class="range-wrap"><input id="tanninRange" type="range" min="0" max="100" value="55" /></div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-title"><span id="drynessLabel">DRYNESS: AUTO</span></div>
+          <div class="metric-subrow"><span>Juicy</span><span>Tight</span></div>
+          <div class="range-wrap"><input id="drynessRange" class="derived-slider" type="range" min="0" max="100" value="50" disabled /></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-block">
+          <div class="panel-title">TEXT</div>
+          <input id="textInput" class="text-input" maxlength="1" value="A" />
+        </div>
+
+        <div class="panel-block">
+          <div class="panel-title">SIZE</div>
+          <input id="sizeRange" type="range" min="120" max="1200" value="800" />
+        </div>
+
+        <div class="panel-block">
+          <div class="panel-title">TYPE COLOR</div>
+          <div class="swatches">
+            <div class="swatch white" data-type-color="white" title="White"></div>
+            <div class="swatch black" data-type-color="black" title="Black"></div>
+            <div class="swatch brand" data-type-color="neon" title="Neon"></div>
+            <div class="swatch custom" id="typeCustomSwatch" data-type-color="custom" title="Custom"></div>
+            <input id="typeColorPicker" class="hidden-picker" type="color" value="#50ffc8" />
+          </div>
+        </div>
+
+        <div class="panel-block">
+          <div class="panel-title">BACKGROUND</div>
+          <div class="swatches">
+            <div class="swatch white" data-bg-color="white" title="White"></div>
+            <div class="swatch black" data-bg-color="black" title="Black"></div>
+            <div class="swatch redbg" data-bg-color="brandred" title="#8b1512"></div>
+            <div class="swatch custom" id="bgCustomSwatch" data-bg-color="custom" title="Custom"></div>
+            <input id="bgColorPicker" class="hidden-picker" type="color" value="#8b1512" />
+          </div>
+        </div>
+
+        <div class="panel-block">
+          <div class="panel-title">AUTO MOTION</div>
+          <div class="radio-list">
+            <div class="radio-item" data-auto-motion="off"><div class="radio-dot"></div><span>Off</span></div>
+            <div class="radio-item" data-auto-motion="on"><div class="radio-dot"></div><span>On</span></div>
+          </div>
+        </div>
+
+        <div class="panel-block">
+          <div class="panel-title">BLEND MODE</div>
+          <div class="radio-list">
+            <div class="radio-item" data-blend="normal"><div class="radio-dot"></div><span>Normal</span></div>
+            <div class="radio-item" data-blend="screen"><div class="radio-dot"></div><span>Screen</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-copy">
+        RADIUS BAR CUSTOM GENERATOR<br />
+        SUBMIT YOUR CUSTOM ORDER AND<br />
+        WE’LL SERVE A GLASS TO THE TABLE
+      </div>
+
+      <div class="summary">
+        <div id="summaryLine1" class="summary-line-1">BODY 53 · ACIDITY 27 · TANNIN 55 · DRYNESS AUTO</div>
+        <div id="summaryLine2" class="summary-line-2">Motion: Off</div>
+      </div>
+
+      <div class="buttons">
+        <button id="orderBtn" class="pill-btn">ORDER</button>
+        <button id="saveBtn" class="pill-btn">SAVE</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let font;
+    let centers = [];
+    let canvas;
+
+    // -------------------- DEFAULT STATE --------------------
+    const state = {
+      text: 'A',
+      size: 800,
+      body: 53,
+      acidity: 27,
+      tannin: 55,
+      dryness: 0,
+      drynessAutoLabel: true,
+      typeColorMode: 'neon',
+      typeCustomColor: '#50ffc8',
+      bgMode: 'brandred',
+      bgCustomColor: '#8b1512',
+      autoMotion: false,
+      blend: 'screen',
+      drawMode: 'stroke'
+    };
+
+    // -------------------- TEXT / FORM PARAMS --------------------
+    let trackingVal = 40;
+    let leadingVal = 80;
+    let radiusMin = 12;
+    let radiusMax = 90;
+    let step = 18;
+    let spacing = 70;
+    let strokeW = 1.5;
+    let rippleAlpha = 255;
+
+    const BASE_SIZE = 800;
+    const BASE_TRACKING = 40;
+    const BASE_LEADING = 80;
+
+    // -------------------- MOTION PARAMS --------------------
+    let breatheOn = false;
+    let breatheAmp = 0.06;
+    let breatheSpeed = 0.9;
+
+    let trailOn = false;
+    let trailAlpha = 18;
+
+    let fizzOn = false;
+    let fizzAmp = 1.2;
+    let fizzSpeed = 1.4;
+    let fizzThreshold = 0.72;
+
+    let waveOn = false;
+    let waveAmp = 0.14;
+    let waveScale = 0.02;
+    let waveSpeed = 1.5;
+
+    let driftOn = false;
+    let driftAmp = 0;
+    let driftSpeed = 0.95;
+
+    let wobbleOn = false;
+    let wobbleAmp = 0;
+    let wobbleSpeed = 1.1;
+
+    // -------------------- UI REFS --------------------
+    const ui = {};
+
+    function preload() {
+      font = loadFont('Montserrat-VariableFont_wght.ttf');
+    }
+
+    function setup() {
+      canvas = createCanvas(windowWidth, windowHeight);
+      canvas.parent('canvasWrap');
+      canvas.position(0, 0);
+      canvas.style('display', 'block');
+      setupUI();
+      recalcAll();
+    }
+
+    function draw() {
+      renderScene();
+    }
+
+    function setupUI() {
+      ui.bodyRange = document.getElementById('bodyRange');
+      ui.acidityRange = document.getElementById('acidityRange');
+      ui.tanninRange = document.getElementById('tanninRange');
+      ui.drynessRange = document.getElementById('drynessRange');
+      ui.sizeRange = document.getElementById('sizeRange');
+      ui.textInput = document.getElementById('textInput');
+      ui.bodyLabel = document.getElementById('bodyLabel');
+      ui.acidityLabel = document.getElementById('acidityLabel');
+      ui.tanninLabel = document.getElementById('tanninLabel');
+      ui.drynessLabel = document.getElementById('drynessLabel');
+      ui.summaryLine1 = document.getElementById('summaryLine1');
+      ui.summaryLine2 = document.getElementById('summaryLine2');
+      ui.orderBtn = document.getElementById('orderBtn');
+      ui.saveBtn = document.getElementById('saveBtn');
+      ui.typeColorPicker = document.getElementById('typeColorPicker');
+      ui.bgColorPicker = document.getElementById('bgColorPicker');
+      ui.typeSwatches = [...document.querySelectorAll('[data-type-color]')];
+      ui.bgSwatches = [...document.querySelectorAll('[data-bg-color]')];
+      ui.motionRadios = [...document.querySelectorAll('[data-auto-motion]')];
+      ui.blendRadios = [...document.querySelectorAll('[data-blend]')];
+
+      ui.bodyRange.addEventListener('input', () => {
+        state.body = Number(ui.bodyRange.value);
+        state.drynessAutoLabel = false;
+        recalcAll();
+      });
+
+      ui.acidityRange.addEventListener('input', () => {
+        state.acidity = Number(ui.acidityRange.value);
+        recalcAll();
+      });
+
+      ui.tanninRange.addEventListener('input', () => {
+        state.tannin = Number(ui.tanninRange.value);
+        state.drynessAutoLabel = false;
+        recalcAll();
+      });
+
+      ui.sizeRange.addEventListener('input', () => {
+        state.size = Number(ui.sizeRange.value);
+        recalcAll();
+      });
+
+      ui.textInput.addEventListener('focus', () => ui.textInput.select());
+
+      ui.textInput.addEventListener('keydown', (e) => {
+        if (/^[a-zA-Z]$/.test(e.key)) {
+          e.preventDefault();
+          const letter = e.key.toUpperCase();
+          ui.textInput.value = letter;
+          state.text = letter;
+          recalcAll();
+        }
+      });
+
+      ui.textInput.addEventListener('input', () => {
+        const raw = ui.textInput.value.toUpperCase().replace(/[^A-Z]/g, '');
+        const cleaned = raw.slice(-1);
+        state.text = cleaned || 'A';
+        ui.textInput.value = state.text;
+        recalcAll();
+      });
+
+      ui.typeSwatches.forEach(el => {
+        el.addEventListener('click', () => {
+          const mode = el.dataset.typeColor;
+          if (mode === 'custom') {
+            ui.typeColorPicker.click();
+          } else {
+            state.typeColorMode = mode;
+            syncSwatches();
+            recalcAll();
+          }
+        });
+      });
+
+      ui.bgSwatches.forEach(el => {
+        el.addEventListener('click', () => {
+          const mode = el.dataset.bgColor;
+          if (mode === 'custom') {
+            ui.bgColorPicker.click();
+          } else {
+            state.bgMode = mode;
+            syncSwatches();
+            recalcAll();
+          }
+        });
+      });
+
+      ui.typeColorPicker.addEventListener('input', () => {
+        state.typeColorMode = 'custom';
+        state.typeCustomColor = ui.typeColorPicker.value;
+        syncSwatches();
+        recalcAll();
+      });
+
+      ui.bgColorPicker.addEventListener('input', () => {
+        state.bgMode = 'custom';
+        state.bgCustomColor = ui.bgColorPicker.value;
+        syncSwatches();
+        recalcAll();
+      });
+
+      ui.motionRadios.forEach(el => {
+        el.addEventListener('click', () => {
+          state.autoMotion = el.dataset.autoMotion === 'on';
+          syncRadios();
+          recalcAll();
+        });
+      });
+
+      ui.blendRadios.forEach(el => {
+        el.addEventListener('click', () => {
+          state.blend = el.dataset.blend;
+          syncRadios();
+          recalcAll();
+        });
+      });
+
+      ui.orderBtn.addEventListener('click', () => recalcAll());
+      ui.saveBtn.addEventListener('click', exportSVG);
+
+      syncSwatches();
+      syncRadios();
+    }
+
+    function syncSwatches() {
+      ui.typeSwatches.forEach(el => el.classList.toggle('selected', el.dataset.typeColor === state.typeColorMode));
+      ui.bgSwatches.forEach(el => el.classList.toggle('selected', el.dataset.bgColor === state.bgMode));
+    }
+
+    function syncRadios() {
+      ui.motionRadios.forEach(el => {
+        const active = (el.dataset.autoMotion === 'on') === state.autoMotion;
+        el.querySelector('.radio-dot').classList.toggle('selected', active);
+      });
+      ui.blendRadios.forEach(el => {
+        const active = el.dataset.blend === state.blend;
+        el.querySelector('.radio-dot').classList.toggle('selected', active);
+      });
+    }
+
+    function recalcAll() {
+      state.dryness = constrain(Math.round(0.55 * state.tannin + 0.45 * state.body), 0, 100);
+      applyAxesToParams();
+      applyMotionFromAxes();
+      buildAllText();
+      syncLabels();
+    }
+
+    function syncLabels() {
+      ui.bodyLabel.textContent = `BODY: ${state.body}`;
+      ui.acidityLabel.textContent = `ACIDITY: ${state.acidity}`;
+      ui.tanninLabel.textContent = `TANNIN: ${state.tannin}`;
+      ui.drynessRange.value = state.dryness;
+      ui.drynessLabel.textContent = state.drynessAutoLabel ? 'DRYNESS: AUTO' : `DRYNESS: ${state.dryness}`;
+
+      ui.summaryLine1.textContent = `BODY ${state.body} · ACIDITY ${state.acidity} · TANNIN ${state.tannin} · DRYNESS ${state.drynessAutoLabel ? 'AUTO' : state.dryness}`;
+      ui.summaryLine2.textContent = `Motion: ${state.autoMotion ? getActiveMotionNames().join(', ') : 'Off'}`;
+
+      document.documentElement.style.setProperty('--bg', getBackgroundHex());
+      document.documentElement.style.setProperty('--fg', needsDarkForeground() ? '#000' : '#fff');
+      document.documentElement.style.setProperty('--slider-track', needsDarkForeground() ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.18)');
+    }
+
+    function applyAxesToParams() {
+      let bodyN = state.body / 100;
+      let acidN = state.acidity / 100;
+      let tanN = state.tannin / 100;
+      let dryN = state.dryness / 100;
+
+      strokeW = lerp(1.15, 2.8, bodyN);
+      rippleAlpha = lerp(210, 255, bodyN);
+
+      radiusMin = floor(lerp(10, 16, 1 - acidN));
+      radiusMax = floor(lerp(55, 120, acidN));
+
+      step = floor(lerp(28, 15, tanN));
+      spacing = floor(lerp(92, 58, tanN));
+      spacing = floor(spacing * lerp(1.12, 0.98, dryN));
+
+      autoScaleByTextSize();
+    }
+
+    function autoScaleByTextSize() {
+      let s = state.size / BASE_SIZE;
+      trackingVal = Math.round(BASE_TRACKING * s);
+      leadingVal = Math.round(BASE_LEADING * s);
+      strokeW *= s;
+      radiusMin = Math.max(2, Math.round(radiusMin * s));
+      radiusMax = Math.max(radiusMin + 10, Math.round(radiusMax * s));
+      step = Math.max(4, Math.round(step * s));
+      spacing = Math.max(6, Math.round(spacing * s));
+    }
+
+    function applyMotionFromAxes() {
+      // reset
+      breatheOn = false;
+      trailOn = false;
+      fizzOn = false;
+      waveOn = false;
+      driftOn = false;
+      wobbleOn = false;
+
+      state.drawMode = 'stroke';
+      if (!state.autoMotion) return;
+
+      const b = state.body / 100;
+      const a = state.acidity / 100;
+      const t = state.tannin / 100;
+      const alcohol = constrain(0.68 * state.body + 0.32 * (100 - state.acidity), 0, 100) / 100;
+
+      breatheOn = true;
+      breatheAmp = lerp(0.05, 0.12, b);
+      breatheSpeed = lerp(1.7, 0.95, b);
+
+      trailOn = true;
+      trailAlpha = Math.round(lerp(20, 10, b));
+
+      if (state.acidity > 68) {
+        fizzOn = true;
+        fizzAmp = lerp(1.0, 2.8, a);
+        fizzSpeed = lerp(1.1, 2.6, a);
+        fizzThreshold = lerp(0.82, 0.62, a);
+      }
+
+      if (state.acidity > 52) {
+        waveOn = true;
+        waveAmp = lerp(0.10, 0.22, a);
+        waveScale = lerp(0.014, 0.032, a);
+        waveSpeed = lerp(1.1, 2.2, a);
+      }
+
+      if (state.tannin > 65) {
+        driftOn = true;
+        driftAmp = lerp(5.0, 9.8, t);
+        driftSpeed = lerp(1.05, 0.9, t);
+      }
+
+      if (alcohol * 100 > 58) {
+        wobbleOn = true;
+        wobbleAmp = lerp(5.0, 9.8, alcohol);
+        wobbleSpeed = lerp(1.0, 1.2, alcohol);
+      }
+    }
+
+    function getActiveMotionNames() {
+      const names = [];
+      if (breatheOn) names.push('Breathe');
+      if (trailOn) names.push('Trail');
+      if (fizzOn) names.push('Fizz');
+      if (waveOn) names.push('Wave');
+      if (driftOn) names.push('Drift');
+      if (wobbleOn) names.push('Wobble');
+      return names.length ? names : ['Off'];
+    }
+
+    function buildAllText() {
+      centers = [];
+      buildBlockText();
+      centerAlignCenters();
+    }
+
+    function buildBlockText() {
+      const fontSize = state.size;
+      const lines = state.text.toUpperCase().split('\n');
+      const allCenters = [];
+      let glyphCounter = 0;
+
+      textFont(font);
+      textSize(fontSize);
+
+      for (let li = 0; li < lines.length; li++) {
+        const line = lines[li];
+        let cursorX = 0;
+        let cursorY = li * (fontSize + leadingVal);
+
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+
+          if (ch === ' ') {
+            cursorX += textWidth(' ') + trackingVal;
+            glyphCounter++;
+            continue;
+          }
+
+          const info = getGlyphPoints(ch, fontSize);
+          if (!info) {
+            glyphCounter++;
+            continue;
+          }
+
+          const originX = cursorX;
+          const originY = cursorY;
+          const snappedPts = [];
+          let minLX = Infinity;
+          let maxLX = -Infinity;
+
+          for (let p of info.pts) {
+            const sx = Math.round(p.x / spacing) * spacing;
+            const sy = Math.round(p.y / spacing) * spacing;
+            snappedPts.push({ x: sx, y: sy });
+            minLX = min(minLX, sx);
+            maxLX = max(maxLX, sx);
+          }
+
+          if (!snappedPts.length) {
+            glyphCounter++;
+            continue;
+          }
+
+          const shiftX = -minLX;
+          for (let sp of snappedPts) {
+            const gx = originX + sp.x + shiftX;
+            const gy = originY + sp.y;
+            addSnappedPointWorld(allCenters, gx, gy, glyphCounter);
+          }
+
+          const snappedW = (maxLX > minLX) ? (maxLX - minLX) : 0;
+          const adv = Math.max(textWidth(ch), snappedW);
+          cursorX += adv + trackingVal;
+          glyphCounter++;
+        }
+      }
+
+      centers = allCenters;
+    }
+
+    function addSnappedPointWorld(allCenters, sx, sy, gIndex) {
+      for (let q of allCenters) {
+        if (q.gIndex === gIndex && dist(sx, sy, q.x, q.y) < spacing * 0.4) return;
+      }
+      let v = createVector(sx, sy);
+      v.gIndex = gIndex;
+      allCenters.push(v);
+    }
+
+    function getGlyphPoints(ch, fontSize) {
+      let bounds = font.textBounds(ch, 0, 0, fontSize);
+      if (!bounds) return null;
+
+      let x0 = -bounds.w / 2 - bounds.x;
+      let y0 = bounds.h / 2 - bounds.y;
+      let pts = font.textToPoints(ch, x0, y0, fontSize, { sampleFactor: 0.58 });
+      return { pts, width: bounds.w };
+    }
+
+    function centerAlignCenters() {
+      if (!centers.length) return;
+
+      let minX = Infinity, minY = Infinity;
+      let maxX = -Infinity, maxY = -Infinity;
+
+      for (let c of centers) {
+        minX = min(minX, c.x);
+        minY = min(minY, c.y);
+        maxX = max(maxX, c.x);
+        maxY = max(maxY, c.y);
+      }
+
+      const centerX = width * 0.52;
+      const centerY = height * 0.49;
+      const dx = centerX - (minX + maxX) / 2;
+      const dy = centerY - (minY + maxY) / 2;
+
+      for (let c of centers) {
+        c.x += dx;
+        c.y += dy;
+      }
+    }
+
+    function renderScene() {
+      const bg = color(getBackgroundHex());
+      blendMode(BLEND);
+
+      if (state.autoMotion && trailOn) {
+        noStroke();
+        fill(red(bg), green(bg), blue(bg), trailAlpha);
+        rect(0, 0, width, height);
+      } else {
+        background(bg);
+      }
+
+      let modeConst = BLEND;
+      if (state.blend === 'screen') modeConst = SCREEN;
+      blendMode(modeConst);
+
+      for (let c of centers) drawRipple(c, 1);
+    }
+
+    function drawRipple(pt, progress) {
+      let cx = pt.x;
+      let cy = pt.y;
+      let gIndex = pt.gIndex || 0;
+      let time = millis() * 0.001;
+      let p = progress;
+
+      if (state.autoMotion && waveOn) {
+        let w = sin((pt.x + pt.y) * waveScale + time * waveSpeed) * waveAmp;
+        p = constrain(p + w, 0, 1);
+      }
+
+      if (state.autoMotion && wobbleOn) {
+        let ox = (noise(cx * 0.01, cy * 0.01, time * wobbleSpeed) - 0.5) * 2 * wobbleAmp;
+        let oy = (noise(cx * 0.01 + 99, cy * 0.01 + 99, time * wobbleSpeed) - 0.5) * 2 * wobbleAmp;
+        cx += ox;
+        cy += oy;
+      }
+
+      for (let r = radiusMin; r <= radiusMax; r += step) {
+        let t = (r - radiusMin) / max(1, (radiusMax - radiusMin));
+        let visible = t <= p;
+        if (!visible) continue;
+
+        let col = getColorForRipple(t, r, gIndex);
+        let alpha = rippleAlpha;
+        let sw = strokeW;
+        let rr = r;
+
+        if (state.autoMotion && breatheOn) {
+          let b = 1 + sin(time * breatheSpeed + gIndex * 0.3) * breatheAmp;
+          rr = r * b;
+        }
+
+        if (state.autoMotion && fizzOn) {
+          let ringIndex = floor((r - radiusMin) / max(1, step));
+          let n = noise(gIndex * 0.21, ringIndex * 0.23, time * fizzSpeed);
+          let pulse = (n > fizzThreshold)
+            ? (n - fizzThreshold) / max(0.0001, (1 - fizzThreshold))
+            : 0;
+          rr += pulse * fizzAmp * step;
+        }
+
+        let dx = 0, dy = 0;
+        if (state.autoMotion && driftOn) {
+          let ringIndex = floor((r - radiusMin) / max(1, step));
+          let drift = sin(time * driftSpeed + ringIndex * 0.6 + gIndex * 0.2) * driftAmp;
+          dx = drift;
+          dy = -drift * 0.6;
+        }
+
+        if (state.drawMode === 'fill') {
+          noStroke();
+          fill(col[0], col[1], col[2], alpha);
+        } else {
+          noFill();
+          stroke(col[0], col[1], col[2], alpha);
+          strokeWeight(sw);
+        }
+
+        ellipse(cx + dx, cy + dy, rr * 2, rr * 2);
+      }
+    }
+
+    function getColorForRipple(t, r, gIndex) {
+      if (state.typeColorMode === 'white') return [255, 255, 255];
+      if (state.typeColorMode === 'black') return [0, 0, 0];
+      if (state.typeColorMode === 'custom') {
+        const c = hexToRgb(state.typeCustomColor);
+        return [c.r, c.g, c.b];
+      }
+
+      // Neon
+      let tt = constrain(t, 0, 1);
+      return [lerp(80, 255, tt), lerp(255, 40, tt), lerp(200, 180, tt)];
+    }
+
+    function getBackgroundHex() {
+      if (state.bgMode === 'white') return '#ffffff';
+      if (state.bgMode === 'black') return '#000000';
+      if (state.bgMode === 'custom') return state.bgCustomColor;
+      return '#8b1512';
+    }
+
+    function needsDarkForeground() {
+      const c = hexToRgb(getBackgroundHex());
+      const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+      return luminance > 0.72;
+    }
+
+    function exportSVG() {
+      const svgText = buildSVGString();
+      downloadTextAsFile(svgText, 'radius_generator.svg', 'image/svg+xml;charset=utf-8');
+    }
+
+    function buildSVGString() {
+      const w = width;
+      const h = height;
+      let parts = [];
+      const bgHex = getBackgroundHex();
+
+      parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`);
+      parts.push(`<rect x="0" y="0" width="${w}" height="${h}" fill="${bgHex}"/>`);
+
+      for (let c of centers) {
+        parts.push(...rippleToSVGElements(c, 1));
+      }
+
+      parts.push(`</svg>`);
+      return parts.join('');
+    }
+
+    function rippleToSVGElements(pt, progress) {
+      const cx = pt.x;
+      const cy = pt.y;
+      const gIndex = pt.gIndex || 0;
+      let els = [];
+
+      for (let r = radiusMin; r <= radiusMax; r += step) {
+        const t = (r - radiusMin) / max(1, (radiusMax - radiusMin));
+        if (t > progress) continue;
+
+        const col = getColorForRipple(t, r, gIndex);
+        const hex = rgbToHex(col[0], col[1], col[2]);
+        const a = constrain(rippleAlpha, 0, 255) / 255;
+
+        if (state.drawMode === 'fill') {
+          els.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${hex}" fill-opacity="${a}" stroke="none" />`);
+        } else {
+          els.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${hex}" stroke-opacity="${a}" stroke-width="${strokeW}" vector-effect="non-scaling-stroke" />`);
+        }
+      }
+      return els;
+    }
+
+    function downloadTextAsFile(text, filename, mime) {
+      const blob = new Blob([text], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 0);
+    }
+
+    function rgbToHex(r, g, b) {
+      const rr = clamp255(Math.round(r));
+      const gg = clamp255(Math.round(g));
+      const bb = clamp255(Math.round(b));
+      return '#' + [rr, gg, bb].map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+
+    function clamp255(v) {
+      return Math.max(0, Math.min(255, v));
+    }
+
+    function hexToRgb(hex) {
+      const clean = hex.replace('#', '');
+      const bigint = parseInt(clean, 16);
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255,
+      };
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      buildAllText();
+    }
+  </script>
+</body>
 </html>
