@@ -218,25 +218,28 @@
     }
 
     .buttons {
-      right: 36px;
-      bottom: 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+  right: 34px;
+  bottom: 32px;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
 
-    .pill-btn {
-      appearance: none;
-      border: 1px solid var(--fg);
-      background: transparent;
-      color: var(--fg);
-      border-radius: 999px;
-      padding: 8px 18px;
-      font: 500 15px/1 var(--ui-font);
-      cursor: pointer;
-      min-width: 96px;
-      text-align: center;
-    }
+.pill-btn {
+  appearance: none;
+  border: 1px solid var(--fg);
+  background: transparent;
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font: 500 15px/1 var(--ui-font);
+  cursor: pointer;
+  min-width: 96px;
+  text-align: center;
+  margin-left: 0;
+}
 
     .pill-btn:hover { background: rgba(255,255,255,0.08); }
 
@@ -247,7 +250,7 @@
       line-height: 1.35;
       letter-spacing: 0.02em;
       text-transform: uppercase;
-      max-width: 220px;
+      max-width: 260px;
     }
 
     .summary {
@@ -363,11 +366,7 @@
         </div>
       </div>
 
-      <div class="footer-copy">
-        RADIUS BAR CUSTOM GENERATOR<br />
-        SUBMIT YOUR CUSTOM ORDER AND<br />
-        WE’LL SERVE A GLASS TO THE TABLE
-      </div>
+    
 
       <div class="summary">
         <div id="summaryLine1" class="summary-line-1">BODY 53 · ACIDITY 27 · TANNIN 55 · DRYNESS AUTO</div>
