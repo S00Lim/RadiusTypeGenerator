@@ -93,9 +93,12 @@ let bgColorPicker;
 let draggingSliderKey = null;
 
 // =========================
-// MOBILE DETECTION
+// DEVICE
 // =========================
+let FORCE_MOBILE = false;
+
 function isMobileLayout() {
+  if (FORCE_MOBILE) return true;
   const ua = navigator.userAgent || "";
   return /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
 }
@@ -113,16 +116,38 @@ function preload() {
 function setup() {
   canvas = createCanvas(windowWidth, windowHeight);
   canvas.style("display", "block");
+textInput = createInput(textContent);
+textInput.attribute("maxlength", "1");
+textInput.attribute("autocomplete", "off");
+textInput.attribute("autocapitalize", "characters");
+textInput.attribute("spellcheck", "false");
 
-  textInput = createInput(textContent);
-  textInput.attribute("maxlength", "1");
-  textInput.input(() => {
-    let v = textInput.value().toUpperCase().replace(/[^A-Z0-9]/g, "");
-    if (!v.length) v = "A";
-    textContent = v[0];
-    textInput.value(textContent);
+textInput.input(() => {
+  let raw = textInput.value().toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  // 아무것도 없으면 일단 빈칸 유지
+  if (raw.length === 0) {
+    textContent = "";
     buildAllText();
-  });
+    return;
+  }
+
+  // 1글자만 유지
+  textContent = raw[0];
+  if (textInput.value() !== textContent) {
+    textInput.value(textContent);
+  }
+  buildAllText();
+});
+
+// 포커스 잃을 때 비어 있으면 기본값 복구
+textInput.elt.addEventListener("blur", () => {
+  if (!textInput.value().trim()) {
+    textContent = "A";
+    textInput.value("A");
+    buildAllText();
+  }
+});
 
   typeColorPicker = createColorPicker(typeCustomColor);
   typeColorPicker.input(() => {
@@ -176,9 +201,15 @@ function draw() {
 // LAYOUT HELPERS
 // =========================
 function updateLayoutMetrics() {
-  uiScale = min(width / DESIGN_W, height / DESIGN_H);
-  offsetX = (width - DESIGN_W * uiScale) * 0.5;
-  offsetY = (height - DESIGN_H * uiScale) * 0.5;
+  if (isMobileLayout()) {
+    uiScale = 1;
+    offsetX = 0;
+    offsetY = 0;
+  } else {
+    uiScale = min(width / DESIGN_W, height / DESIGN_H);
+    offsetX = (width - DESIGN_W * uiScale) * 0.5;
+    offsetY = (height - DESIGN_H * uiScale) * 0.5;
+  }
 }
 
 function sx(x) {
@@ -194,104 +225,97 @@ function ss(v) {
 }
 
 // =========================
-// MOBILE UI DATA
+// MOBILE / DESKTOP LAYOUT MAP
 // =========================
-function getMobileStackStartY() {
-  return 150;
-}
+function getTopSliders() {
+  if (isMobileLayout()) {
+    const x = 20;
+    const w = 108;
+    const h = 10;
+    const labelGap = 58;
+    const leftLabelX = 20;
+    const rightLabelX = 132;
 
-function getMobileTextPanelStartY() {
-  return 430;
-}
+    return [
+      {
+        key: "body",
+        label: "BODY",
+        value: body,
+        min: 0,
+        max: 100,
+        x,
+        y: 610,
+        w,
+        h,
+        titleX: x,
+        titleY: 597,
+        leftLabel: "Light",
+        rightLabel: "Bold",
+        leftX: leftLabelX,
+        rightX: rightLabelX,
+        subY: 624,
+        disabled: false
+      },
+      {
+        key: "acidity",
+        label: "ACIDITY",
+        value: acidity,
+        min: 0,
+        max: 100,
+        x,
+        y: 653,
+        w,
+        h,
+        titleX: x,
+        titleY: 640,
+        leftLabel: "Soft",
+        rightLabel: "Crisp",
+        leftX: leftLabelX,
+        rightX: rightLabelX,
+        subY: 667,
+        disabled: false
+      },
+      {
+        key: "tannin",
+        label: "TANNIN",
+        value: tannin,
+        min: 0,
+        max: 100,
+        x,
+        y: 696,
+        w,
+        h,
+        titleX: x,
+        titleY: 683,
+        leftLabel: "Smooth",
+        rightLabel: "Gritty",
+        leftX: leftLabelX,
+        rightX: rightLabelX,
+        subY: 710,
+        disabled: false
+      },
+      {
+        key: "dryness",
+        label: "DRYNESS",
+        value: dryness,
+        min: 0,
+        max: 100,
+        x,
+        y: 739,
+        w,
+        h,
+        titleX: x,
+        titleY: 726,
+        leftLabel: "Juicy",
+        rightLabel: "Tight",
+        leftX: leftLabelX,
+        rightX: rightLabelX,
+        subY: 753,
+        disabled: true
+      }
+    ];
+  }
 
-function getMobileTopSliders() {
-  const x = 40;
-  const w = 260;
-  const h = 12;
-  const labelGap = 18;
-  const rowGap = 72;
-
-  return [
-    {
-      key: "body",
-      label: "BODY",
-      value: body,
-      min: 0,
-      max: 100,
-      x,
-      y: getMobileStackStartY() + 20,
-      w,
-      h,
-      titleX: x,
-      titleY: getMobileStackStartY(),
-      leftLabel: "Light",
-      rightLabel: "Bold",
-      leftX: x,
-      rightX: x + w + 16,
-      subY: getMobileStackStartY() + labelGap,
-      disabled: false
-    },
-    {
-      key: "acidity",
-      label: "ACIDITY",
-      value: acidity,
-      min: 0,
-      max: 100,
-      x,
-      y: getMobileStackStartY() + rowGap + 20,
-      w,
-      h,
-      titleX: x,
-      titleY: getMobileStackStartY() + rowGap,
-      leftLabel: "Soft",
-      rightLabel: "Crisp",
-      leftX: x,
-      rightX: x + w + 16,
-      subY: getMobileStackStartY() + rowGap + labelGap,
-      disabled: false
-    },
-    {
-      key: "tannin",
-      label: "TANNIN",
-      value: tannin,
-      min: 0,
-      max: 100,
-      x,
-      y: getMobileStackStartY() + rowGap * 2 + 20,
-      w,
-      h,
-      titleX: x,
-      titleY: getMobileStackStartY() + rowGap * 2,
-      leftLabel: "Smooth",
-      rightLabel: "Gritty",
-      leftX: x,
-      rightX: x + w + 16,
-      subY: getMobileStackStartY() + rowGap * 2 + labelGap,
-      disabled: false
-    },
-    {
-      key: "dryness",
-      label: "DRYNESS",
-      value: dryness,
-      min: 0,
-      max: 100,
-      x,
-      y: getMobileStackStartY() + rowGap * 3 + 20,
-      w,
-      h,
-      titleX: x,
-      titleY: getMobileStackStartY() + rowGap * 3,
-      leftLabel: "Juicy",
-      rightLabel: "Tight",
-      leftX: x,
-      rightX: x + w + 16,
-      subY: getMobileStackStartY() + rowGap * 3 + labelGap,
-      disabled: true
-    }
-  ];
-}
-
-function getDesktopTopSliders() {
   return [
     {
       key: "body",
@@ -372,45 +396,177 @@ function getDesktopTopSliders() {
   ];
 }
 
-function getTopSliders() {
-  return isMobileLayout() ? getMobileTopSliders() : getDesktopTopSliders();
-}
+function getPanelLayout() {
+  if (isMobileLayout()) {
+    return {
+      textLabelX: 20,
+      textLabelY: 785,
+      textInputX: 20,
+      textInputY: 800,
+      textInputW: 108,
+      textInputH: 28,
+      textLineX1: 20,
+      textLineX2: 148,
+      textLineY: 826,
 
-function getDesktopColorItems(group) {
-  return group === "type"
-    ? [
-        { x: 42.52, y: 670.7034, mode: "White" },
-        { x: 64.398, y: 670.7034, mode: "Black" },
-        { x: 86.276, y: 670.7034, mode: "Neon" },
-        { x: 108.1539, y: 670.7034, mode: "Custom" }
-      ]
-    : [
-        { x: 42.52, y: 730.5593, mode: "White" },
-        { x: 64.398, y: 730.5593, mode: "Black" },
-        { x: 86.276, y: 730.5593, mode: "Brand" },
-        { x: 108.1539, y: 730.5593, mode: "Custom" }
-      ];
-}
+      sizeLabelX: 20,
+      sizeLabelY: 855,
+      sizeSliderX: 20,
+      sizeSliderY: 868,
+      sizeSliderW: 108,
+      sizeSliderH: 10,
 
-function getMobileColorItems(group) {
-  const y = group === "type" ? getMobileTextPanelStartY() + 142 : getMobileTextPanelStartY() + 202;
-  return group === "type"
-    ? [
-        { x: 40, y, mode: "White" },
-        { x: 68, y, mode: "Black" },
-        { x: 96, y, mode: "Neon" },
-        { x: 124, y, mode: "Custom" }
-      ]
-    : [
-        { x: 40, y, mode: "White" },
-        { x: 68, y, mode: "Black" },
-        { x: 96, y, mode: "Brand" },
-        { x: 124, y, mode: "Custom" }
-      ];
+      typeLabelX: 20,
+      typeLabelY: 908,
+      typeBaseY: 918,
+
+      bgLabelX: 20,
+      bgLabelY: 948,
+      bgBaseY: 958,
+
+      autoLabelX: 20,
+      autoLabelY: 988,
+      autoOnCx: 20,
+      autoOnCy: 1002,
+      autoOnTx: 36,
+      autoOnTy: 1007,
+      autoOffCx: 20,
+      autoOffCy: 1022,
+      autoOffTx: 36,
+      autoOffTy: 1027,
+
+      blendLabelX: 20,
+      blendLabelY: 1052,
+      blendNormalCx: 20,
+      blendNormalCy: 1066,
+      blendNormalTx: 36,
+      blendNormalTy: 1071,
+      blendScreenCx: 20,
+      blendScreenCy: 1086,
+      blendScreenTx: 36,
+      blendScreenTy: 1091,
+
+      saveX: 20,
+      saveY: 1130,
+      saveW: 70,
+      saveH: 24,
+
+      orderX: 20,
+      orderY: 1160,
+      orderW: 70,
+      orderH: 24
+    };
+  }
+
+  return {
+    textLabelX: 32.9916,
+    textLabelY: 530.1594,
+    textInputX: 35.6415,
+    textInputY: 528,
+    textInputW: 142.5,
+    textInputH: 30,
+    textLineX1: 35.6415,
+    textLineX2: 178.1843,
+    textLineY: 556.0397,
+
+    sizeLabelX: 35.7025,
+    sizeLabelY: 594.3201,
+    sizeSliderX: 35.6415,
+    sizeSliderY: 603.88,
+    sizeSliderW: 143.4212,
+    sizeSliderH: 12.7641,
+
+    typeLabelX: 35.7025,
+    typeLabelY: 654.9246,
+    typeBaseY: 665.0,
+
+    bgLabelX: 35.7025,
+    bgLabelY: 714.7829,
+    bgBaseY: 725.0,
+
+    autoLabelX: 35.7025,
+    autoLabelY: 774.5493,
+    autoOnCx: 42.52,
+    autoOnCy: 790.1155,
+    autoOnTx: 57.7498,
+    autoOnTy: 795.776,
+    autoOffCx: 42.52,
+    autoOffCy: 814.1689,
+    autoOffTx: 57.7498,
+    autoOffTy: 819.8294,
+
+    blendLabelX: 35.7025,
+    blendLabelY: 858.1137,
+    blendNormalCx: 42.52,
+    blendNormalCy: 874.8965,
+    blendNormalTx: 57.7498,
+    blendNormalTy: 880.5569,
+    blendScreenCx: 42.52,
+    blendScreenCy: 898.3548,
+    blendScreenTx: 57.7498,
+    blendScreenTy: 904.0153,
+
+    saveX: 35.702,
+    saveY: 972.2339,
+    saveW: 95.0218,
+    saveH: 30.5844,
+
+    orderX: 35.702,
+    orderY: 1013.7338,
+    orderW: 95.0218,
+    orderH: 30.5844
+  };
 }
 
 function getColorItems(group) {
-  return isMobileLayout() ? getMobileColorItems(group) : getDesktopColorItems(group);
+  const panel = getPanelLayout();
+
+  if (isMobileLayout()) {
+    return group === "type"
+      ? [
+          { x: 20, y: panel.typeBaseY + 5, mode: "White" },
+          { x: 40, y: panel.typeBaseY + 5, mode: "Black" },
+          { x: 60, y: panel.typeBaseY + 5, mode: "Neon" },
+          { x: 80, y: panel.typeBaseY + 5, mode: "Custom" }
+        ]
+      : [
+          { x: 20, y: panel.bgBaseY + 5, mode: "White" },
+          { x: 40, y: panel.bgBaseY + 5, mode: "Black" },
+          { x: 60, y: panel.bgBaseY + 5, mode: "Brand" },
+          { x: 80, y: panel.bgBaseY + 5, mode: "Custom" }
+        ];
+  }
+
+  return group === "type"
+    ? [
+        { x: 42.52, y: panel.typeBaseY + 5.7034, mode: "White" },
+        { x: 64.398, y: panel.typeBaseY + 5.7034, mode: "Black" },
+        { x: 86.276, y: panel.typeBaseY + 5.7034, mode: "Neon" },
+        { x: 108.1539, y: panel.typeBaseY + 5.7034, mode: "Custom" }
+      ]
+    : [
+        { x: 42.52, y: panel.bgBaseY + 5.7034, mode: "White" },
+        { x: 64.398, y: panel.bgBaseY + 5.7034, mode: "Black" },
+        { x: 86.276, y: panel.bgBaseY + 5.7034, mode: "Brand" },
+        { x: 108.1539, y: panel.bgBaseY + 5.7034, mode: "Custom" }
+      ];
+}
+
+// =========================
+// CLEAR UI REGIONS
+// =========================
+function clearUIRegions(bgCol) {
+  noStroke();
+  fill(bgCol);
+
+  if (isMobileLayout()) {
+    rect(0, 580, 170, 650);
+    rect(0, height - 70, width, 70);
+  } else {
+    rect(0, 0, width, sy(96));
+    rect(0, sy(500), sx(270), height - sy(500));
+    rect(sx(600), sy(1006), ss(760), ss(52));
+  }
 }
 
 // =========================
@@ -438,7 +594,7 @@ function getSubTextColor() {
 }
 
 function getBarBgColor() {
-  return bgIsLight() ? color(224) : color(224);
+  return color(224);
 }
 
 function getBorderGray() {
@@ -472,23 +628,6 @@ function getTypeBaseColor() {
 }
 
 // =========================
-// UI REGION CLEAR
-// =========================
-function clearUIRegions(bgCol) {
-  noStroke();
-  fill(bgCol);
-
-  if (isMobileLayout()) {
-    rect(0, 0, sx(380), height);
-    rect(0, height - ss(80), width, ss(80));
-  } else {
-    rect(0, 0, width, sy(96));
-    rect(0, sy(500), sx(270), height - sy(500));
-    rect(sx(600), sy(1006), ss(760), ss(52));
-  }
-}
-
-// =========================
 // DRAW UI
 // =========================
 function drawUI() {
@@ -519,21 +658,21 @@ function drawTopAxisUI(uiText, subText, barBg) {
     noStroke();
     fill(uiText);
     textStyle(BOLD);
-    textSize(ss(16));
+    textSize(isMobileLayout() ? 10 : ss(16));
     text(titleText, sx(s.titleX), sy(s.titleY));
 
     fill(subText);
     textStyle(NORMAL);
-    textSize(ss(16));
+    textSize(isMobileLayout() ? 10 : ss(16));
     text(s.leftLabel, sx(s.leftX), sy(s.subY));
     text(s.rightLabel, sx(s.rightX), sy(s.subY));
 
     noStroke();
     fill(barBg);
-    rect(sx(s.x), sy(s.y), ss(s.w), ss(s.h), ss(6.3821));
+    rect(sx(s.x), sy(s.y), ss(s.w), ss(s.h), ss(6));
 
-    const knobR = ss(6.0002);
-    const knobInset = 6.0002;
+    const knobInset = isMobileLayout() ? 5 : 6.0002;
+    const knobR = isMobileLayout() ? 5 : ss(6.0002);
     const knobX = sx(s.x + map(s.value, s.min, s.max, knobInset, s.w - knobInset));
     const knobY = sy(s.y + s.h * 0.5);
 
@@ -542,149 +681,87 @@ function drawTopAxisUI(uiText, subText, barBg) {
     } else {
       fill(getPointerColor());
     }
-    circle(knobX, knobY, knobR * 2);
+    circle(knobX, knobY, isMobileLayout() ? knobR * 2 : knobR * 2);
   }
 }
 
 function drawLeftPanel(uiText, subText, outline) {
+  const p = getPanelLayout();
+
   textFont("Apple SD Gothic Neo");
-
-  if (isMobileLayout()) {
-    const startY = getMobileTextPanelStartY();
-
-    noStroke();
-    fill(uiText);
-    textAlign(LEFT, BASELINE);
-    textStyle(BOLD);
-    textSize(ss(16));
-    text("TEXT", sx(40), sy(startY));
-
-    stroke(outline);
-    strokeWeight(ss(1.0537));
-    line(sx(40), sy(startY + 26), sx(300), sy(startY + 26));
-
-    noStroke();
-    fill(uiText);
-    textStyle(BOLD);
-    textSize(ss(16));
-    text("SIZE", sx(40), sy(startY + 70));
-
-    fill(getBarBgColor());
-    rect(sx(40), sy(startY + 82), ss(260), ss(12.7641), ss(6.3821));
-
-    fill(getPointerColor());
-    const sizeKnobInset = 6.0002;
-    const sizeKnobX = sx(40 + map(textSizeVal, 60, 1200, sizeKnobInset, 260 - sizeKnobInset));
-    circle(sizeKnobX, sy(startY + 88.382), ss(12.0004));
-
-    noStroke();
-    fill(uiText);
-    textStyle(BOLD);
-    textSize(ss(16));
-    text("TYPE COLOR", sx(40), sy(startY + 130));
-    drawColorOptions("type");
-
-    noStroke();
-    fill(uiText);
-    textStyle(BOLD);
-    textSize(ss(16));
-    text("BACKGROUND", sx(40), sy(startY + 190));
-    drawColorOptions("bg");
-
-    noStroke();
-    fill(uiText);
-    textStyle(BOLD);
-    textSize(ss(16));
-    text("AUTO MOTION", sx(40), sy(startY + 250));
-    drawRadio(42, startY + 266, autoMotionOn, "On", 60, startY + 271, uiText, subText);
-    drawRadio(42, startY + 292, !autoMotionOn, "Off", 60, startY + 297, uiText, subText);
-
-    noStroke();
-    fill(uiText);
-    textStyle(BOLD);
-    textSize(ss(16));
-    text("BLEND MODE", sx(40), sy(startY + 338));
-    drawRadio(42, startY + 354, blendModeName === "Normal", "Normal", 60, startY + 359, uiText, subText);
-    drawRadio(42, startY + 380, blendModeName === "Screen", "Screen", 60, startY + 385, uiText, subText);
-
-    drawButton(40, startY + 430, 120, 34, "SAVE", uiText, false);
-    drawButton(40, startY + 474, 120, 34, "ORDER", uiText, false);
-
-    return;
-  }
+  textAlign(LEFT, BASELINE);
 
   noStroke();
   fill(uiText);
-  textAlign(LEFT, BASELINE);
   textStyle(BOLD);
-  textSize(ss(16));
-  text("TEXT", sx(32.9916), sy(530.1594));
+  textSize(isMobileLayout() ? 10 : ss(16));
+  text("TEXT", sx(p.textLabelX), sy(p.textLabelY));
 
   stroke(outline);
-  strokeWeight(ss(1.0537));
-  line(sx(35.6415), sy(556.0397), sx(178.1843), sy(556.0397));
+  strokeWeight(isMobileLayout() ? 1 : ss(1.0537));
+  line(sx(p.textLineX1), sy(p.textLineY), sx(p.textLineX2), sy(p.textLineY));
 
   noStroke();
   fill(uiText);
   textStyle(BOLD);
-  textSize(ss(16));
-  text("SIZE", sx(35.7025), sy(594.3201));
+  textSize(isMobileLayout() ? 10 : ss(16));
+  text("SIZE", sx(p.sizeLabelX), sy(p.sizeLabelY));
 
   fill(getBarBgColor());
-  rect(sx(35.6415), sy(603.88), ss(143.4212), ss(12.7641), ss(6.3821));
+  rect(sx(p.sizeSliderX), sy(p.sizeSliderY), ss(p.sizeSliderW), ss(p.sizeSliderH), ss(6));
 
   fill(getPointerColor());
-  const sizeKnobInset = 6.0002;
-  const sizeKnobX = sx(35.6415 + map(textSizeVal, 60, 1200, sizeKnobInset, 143.4212 - sizeKnobInset));
-  circle(sizeKnobX, sy(610.2621), ss(12.0004));
+  const sizeKnobInset = isMobileLayout() ? 5 : 6.0002;
+  const sizeKnobX = sx(p.sizeSliderX + map(textSizeVal, 60, 1200, sizeKnobInset, p.sizeSliderW - sizeKnobInset));
+  circle(sizeKnobX, sy(p.sizeSliderY + p.sizeSliderH * 0.5), isMobileLayout() ? 10 : ss(12.0004));
 
   noStroke();
   fill(uiText);
   textStyle(BOLD);
-  textSize(ss(16));
-  text("TYPE COLOR", sx(35.7025), sy(654.9246));
-  drawColorOptions("type");
+  textSize(isMobileLayout() ? 10 : ss(16));
+  text("TYPE COLOR", sx(p.typeLabelX), sy(p.typeLabelY));
+  drawColorOptions(typeColorMode, "type");
 
   noStroke();
   fill(uiText);
   textStyle(BOLD);
-  textSize(ss(16));
-  text("BACKGROUND", sx(35.7025), sy(714.7829));
-  drawColorOptions("bg");
+  textSize(isMobileLayout() ? 10 : ss(16));
+  text("BACKGROUND", sx(p.bgLabelX), sy(p.bgLabelY));
+  drawColorOptions(bgMode, "bg");
 
   noStroke();
   fill(uiText);
   textStyle(BOLD);
-  textSize(ss(16));
-  text("AUTO MOTION", sx(35.7025), sy(774.5493));
-  drawRadio(42.52, 790.1155, autoMotionOn, "On", 57.7498, 795.776, uiText, subText);
-  drawRadio(42.52, 814.1689, !autoMotionOn, "Off", 57.7498, 819.8294, uiText, subText);
+  textSize(isMobileLayout() ? 10 : ss(16));
+  text("AUTO MOTION", sx(p.autoLabelX), sy(p.autoLabelY));
+  drawRadio(p.autoOnCx, p.autoOnCy, autoMotionOn, "On", p.autoOnTx, p.autoOnTy, uiText, subText);
+  drawRadio(p.autoOffCx, p.autoOffCy, !autoMotionOn, "Off", p.autoOffTx, p.autoOffTy, uiText, subText);
 
   noStroke();
   fill(uiText);
   textStyle(BOLD);
-  textSize(ss(16));
-  text("BLEND MODE", sx(35.7025), sy(858.1137));
-  drawRadio(42.52, 874.8965, blendModeName === "Normal", "Normal", 57.7498, 880.5569, uiText, subText);
-  drawRadio(42.52, 898.3548, blendModeName === "Screen", "Screen", 57.7498, 904.0153, uiText, subText);
+  textSize(isMobileLayout() ? 10 : ss(16));
+  text("BLEND MODE", sx(p.blendLabelX), sy(p.blendLabelY));
+  drawRadio(p.blendNormalCx, p.blendNormalCy, blendModeName === "Normal", "Normal", p.blendNormalTx, p.blendNormalTy, uiText, subText);
+  drawRadio(p.blendScreenCx, p.blendScreenCy, blendModeName === "Screen", "Screen", p.blendScreenTx, p.blendScreenTy, uiText, subText);
 
-  drawButton(35.702, 972.2339, 95.0218, 30.5844, "SAVE", uiText, false);
-  drawButton(35.702, 1013.7338, 95.0218, 30.5844, "ORDER", uiText, false);
+  drawButton(p.saveX, p.saveY, p.saveW, p.saveH, "SAVE", uiText, false);
+  drawButton(p.orderX, p.orderY, p.orderW, p.orderH, "ORDER", uiText, false);
 }
 
-function drawColorOptions(group) {
+function drawColorOptions(selectedMode, group) {
   const uiText = getUITextColor();
   const border = getBorderGray();
   const items = getColorItems(group);
+  const r = isMobileLayout() ? 4 : ss(6.0002);
 
   for (const item of items) {
     const cx = sx(item.x);
     const cy = sy(item.y);
-    const r = ss(6.0002);
 
     if (item.mode === "White") {
       stroke(border);
-      strokeWeight(ss(1));
+      strokeWeight(1);
       fill(255);
       circle(cx, cy, r * 2);
     } else if (item.mode === "Black") {
@@ -696,7 +773,7 @@ function drawColorOptions(group) {
       drawNeonSwatch(cx, cy, r);
     } else if (item.mode === "Brand") {
       stroke(border);
-      strokeWeight(ss(1));
+      strokeWeight(1);
       fill("#8b1512");
       circle(cx, cy, r * 2);
     } else if (item.mode === "Custom") {
@@ -704,15 +781,11 @@ function drawColorOptions(group) {
       drawRainbowSwatch(cx, cy, r);
     }
 
-    const selected = group === "type"
-      ? typeColorMode === item.mode
-      : bgMode === item.mode;
-
-    if (selected) {
+    if (selectedMode === item.mode) {
       noFill();
       stroke(uiText);
-      strokeWeight(ss(1.2));
-      circle(cx, cy, r * 2 + ss(4));
+      strokeWeight(1.2);
+      circle(cx, cy, r * 2 + (isMobileLayout() ? 5 : ss(4)));
     }
   }
 }
@@ -743,21 +816,19 @@ function drawRainbowSwatch(cx, cy, r) {
 
 function drawRadio(cx, cy, checked, label, tx, ty, uiText, subText) {
   const fillCol = getRadioFillColor();
+  const d = isMobileLayout() ? 10 : ss(12.0004);
 
   stroke(bgIsLight() ? color(120) : color(255));
-  strokeWeight(ss(1));
-  if (checked) {
-    fill(fillCol);
-  } else {
-    fill(0, 0);
-  }
-  circle(sx(cx), sy(cy), ss(12.0004));
+  strokeWeight(1);
+  if (checked) fill(fillCol);
+  else fill(0, 0);
+  circle(sx(cx), sy(cy), d);
 
   noStroke();
   fill(subText);
   textFont("Apple SD Gothic Neo");
   textStyle(NORMAL);
-  textSize(ss(16));
+  textSize(isMobileLayout() ? 10 : ss(16));
   text(label, sx(tx), sy(ty));
 }
 
@@ -767,7 +838,7 @@ function drawButton(x, y, w, h, label, uiText, disabled = false) {
 
   noFill();
   stroke(strokeCol);
-  strokeWeight(ss(1));
+  strokeWeight(1);
   rect(sx(x), sy(y), ss(w), ss(h), ss(15));
 
   noStroke();
@@ -775,7 +846,7 @@ function drawButton(x, y, w, h, label, uiText, disabled = false) {
   textAlign(CENTER, CENTER);
   textFont("Apple SD Gothic Neo");
   textStyle(BOLD);
-  textSize(ss(16));
+  textSize(isMobileLayout() ? 10 : ss(16));
   text(label, sx(x + w * 0.5), sy(y + h * 0.5 + 0.5));
   textAlign(LEFT, BASELINE);
 }
@@ -790,16 +861,9 @@ function drawSummary(uiText) {
   textAlign(CENTER, BASELINE);
   textFont("Apple SD Gothic Neo");
   textStyle(NORMAL);
-  textSize(ss(12));
-
-  if (isMobileLayout()) {
-    text(line1, sx(195), sy(786));
-    text(line2, sx(195), sy(802));
-  } else {
-    text(line1, sx(960), sy(1023.7974));
-    text(line2, sx(960), sy(1038.1968));
-  }
-
+  textSize(isMobileLayout() ? 8 : ss(12));
+  text(line1, width * 0.5, isMobileLayout() ? height - 48 : sy(1023.7974));
+  text(line2, width * 0.5, isMobileLayout() ? height - 34 : sy(1038.1968));
   textAlign(LEFT, BASELINE);
 }
 
@@ -818,21 +882,16 @@ function getActiveMotionNames() {
 // DOM POSITIONING
 // =========================
 function positionDOM() {
-  if (isMobileLayout()) {
-    textInput.position(sx(40), sy(getMobileTextPanelStartY() + 8));
-    textInput.size(ss(240), ss(28));
+  const p = getPanelLayout();
+  const typeItems = getColorItems("type");
+  const bgItems = getColorItems("bg");
+  const typeCustom = typeItems.find(i => i.mode === "Custom");
+  const bgCustom = bgItems.find(i => i.mode === "Custom");
 
-    typeColorPicker.position(sx(118), sy(getMobileTextPanelStartY() + 134));
-    bgColorPicker.position(sx(118), sy(getMobileTextPanelStartY() + 194));
-  } else {
-    textInput.position(sx(35.6415), sy(528));
-    textInput.size(ss(142.5), ss(30));
+  textInput.position(sx(p.textInputX), sy(p.textInputY));
+  textInput.size(isMobileLayout() ? p.textInputW : ss(p.textInputW), isMobileLayout() ? p.textInputH : ss(p.textInputH));
 
-    typeColorPicker.position(sx(99), sy(662));
-    bgColorPicker.position(sx(99), sy(722));
-  }
-
-  textInput.style("font-size", `${max(12, ss(16))}px`);
+  textInput.style("font-size", isMobileLayout() ? "18px" : `${max(12, ss(16))}px`);
   textInput.style("font-family", "Apple SD Gothic Neo, sans-serif");
   textInput.style("font-weight", "400");
   textInput.style("background", "transparent");
@@ -846,6 +905,8 @@ function positionDOM() {
   textInput.style("z-index", "20");
   textInput.style("pointer-events", "auto");
   textInput.style("text-align", "left");
+  textInput.style("user-select", "text");
+textInput.style("-webkit-user-select", "text");
 
   textInput.elt.style.position = "absolute";
   textInput.elt.style.backgroundColor = "transparent";
@@ -854,7 +915,8 @@ function positionDOM() {
   textInput.elt.style.appearance = "none";
 
   typeColorPicker.show();
-  typeColorPicker.size(ss(18), ss(18));
+  typeColorPicker.position(sx(typeCustom.x - 8), sy(typeCustom.y - 8));
+  typeColorPicker.size(18, 18);
   typeColorPicker.style("opacity", "0");
   typeColorPicker.style("z-index", "40");
   typeColorPicker.style("pointer-events", "auto");
@@ -867,7 +929,8 @@ function positionDOM() {
   typeColorPicker.style("-webkit-appearance", "none");
 
   bgColorPicker.show();
-  bgColorPicker.size(ss(18), ss(18));
+  bgColorPicker.position(sx(bgCustom.x - 8), sy(bgCustom.y - 8));
+  bgColorPicker.size(18, 18);
   bgColorPicker.style("opacity", "0");
   bgColorPicker.style("z-index", "40");
   bgColorPicker.style("pointer-events", "auto");
@@ -1090,8 +1153,17 @@ function centerAlignCenters() {
     maxY = max(maxY, c.y);
   }
 
-  const targetCenterX = DESIGN_W * 0.5;
-  const targetCenterY = isMobileLayout() ? 500 : 540;
+  let targetCenterX;
+  let targetCenterY;
+
+  if (isMobileLayout()) {
+    targetCenterX = width * 0.5;
+    targetCenterY = 820;
+  } else {
+    targetCenterX = DESIGN_W * 0.5;
+    targetCenterY = 540;
+  }
+
   const dx = targetCenterX - (minX + maxX) * 0.5;
   const dy = targetCenterY - (minY + maxY) * 0.5;
 
@@ -1141,8 +1213,7 @@ function drawRipple(pt, progress) {
 
   for (let r = radiusMin; r <= radiusMax; r += step) {
     const t = (r - radiusMin) / max(1, (radiusMax - radiusMin));
-    const visible = t <= p;
-    if (!visible) continue;
+    if (t > p) continue;
 
     const col = getRippleColor(t);
     let alpha = rippleAlpha;
@@ -1175,7 +1246,7 @@ function drawRipple(pt, progress) {
     } else {
       noFill();
       stroke(col[0], col[1], col[2], alpha);
-      strokeWeight(strokeW * uiScale * 0.92);
+      strokeWeight(isMobileLayout() ? strokeW : strokeW * uiScale * 0.92);
     }
 
     ellipse(sx(cx + dx), sy(cy + dy), ss(rr * 2), ss(rr * 2));
@@ -1188,31 +1259,24 @@ function getRippleColor(t) {
   const c1 = color("#50ffc8");
   const c2 = color("#f239b6");
   const c = lerpColor(c1, c2, constrain(t, 0, 1));
-
   return [red(c), green(c), blue(c)];
 }
 
 // =========================
-// MOUSE
+// MOUSE / TOUCH
 // =========================
 function mousePressed() {
-  if (isMobileLayout()) {
-    if (pointInRect(mouseX, mouseY, sx(40), sy(getMobileTextPanelStartY()), ss(260), ss(40))) {
-      textInput.elt.focus();
-      return;
-    }
-  } else {
-    if (pointInRect(mouseX, mouseY, sx(35.6415), sy(528), ss(142.5), ss(30))) {
-      textInput.elt.focus();
-      return;
-    }
-  }
-
+  const p = getPanelLayout();
   const sliders = getTopSliders();
+
+  if (pointInRect(mouseX, mouseY, sx(p.textInputX), sy(p.textInputY), isMobileLayout() ? p.textInputW : ss(p.textInputW), isMobileLayout() ? p.textInputH : ss(p.textInputH))) {
+    textInput.elt.focus();
+    return;
+  }
 
   for (const s of sliders) {
     if (s.disabled) continue;
-    if (pointInRect(mouseX, mouseY, sx(s.x) - ss(8), sy(s.y) - ss(10), ss(s.w) + ss(16), ss(s.h) + ss(20))) {
+    if (pointInRect(mouseX, mouseY, sx(s.x) - 10, sy(s.y) - 10, ss(s.w) + 20, ss(s.h) + 20)) {
       draggingSliderKey = s.key;
       updateSliderByMouse(s.key, mouseX);
       drynessInitialized = true;
@@ -1220,122 +1284,49 @@ function mousePressed() {
     }
   }
 
-  if (isMobileLayout()) {
-    if (pointInRect(mouseX, mouseY, sx(40) - ss(8), sy(getMobileTextPanelStartY() + 82) - ss(10), ss(260) + ss(16), ss(12.7641) + ss(20))) {
-      draggingSliderKey = "size";
-      updateSliderByMouse("size", mouseX);
-      return;
-    }
-  } else {
-    if (pointInRect(mouseX, mouseY, sx(35.6415) - ss(8), sy(603.88) - ss(10), ss(143.4212) + ss(16), ss(12.7641) + ss(20))) {
-      draggingSliderKey = "size";
-      updateSliderByMouse("size", mouseX);
-      return;
-    }
+  if (pointInRect(mouseX, mouseY, sx(p.sizeSliderX) - 10, sy(p.sizeSliderY) - 10, ss(p.sizeSliderW) + 20, ss(p.sizeSliderH) + 20)) {
+    draggingSliderKey = "size";
+    updateSliderByMouse("size", mouseX);
+    return;
   }
 
   if (handleColorClick("type")) return;
   if (handleColorClick("bg")) return;
 
-  if (isMobileLayout()) {
-    const startY = getMobileTextPanelStartY();
+  if (pointInCircle(mouseX, mouseY, sx(p.autoOnCx), sy(p.autoOnCy), 12) ||
+      pointInRect(mouseX, mouseY, sx(p.autoOnTx), sy(p.autoOnTy - 12), 70, 20)) {
+    autoMotionOn = true;
+    applyAxesToParams();
+    return;
+  }
 
-    if (pointInCircle(mouseX, mouseY, sx(42), sy(startY + 266), ss(10))) {
-      autoMotionOn = true;
-      applyAxesToParams();
-      return;
-    }
-    if (pointInCircle(mouseX, mouseY, sx(42), sy(startY + 292), ss(10))) {
-      autoMotionOn = false;
-      applyAxesToParams();
-      return;
-    }
+  if (pointInCircle(mouseX, mouseY, sx(p.autoOffCx), sy(p.autoOffCy), 12) ||
+      pointInRect(mouseX, mouseY, sx(p.autoOffTx), sy(p.autoOffTy - 12), 70, 20)) {
+    autoMotionOn = false;
+    applyAxesToParams();
+    return;
+  }
 
-    if (pointInRect(mouseX, mouseY, sx(60), sy(startY + 256), ss(50), ss(22))) {
-      autoMotionOn = true;
-      applyAxesToParams();
-      return;
-    }
-    if (pointInRect(mouseX, mouseY, sx(60), sy(startY + 282), ss(50), ss(22))) {
-      autoMotionOn = false;
-      applyAxesToParams();
-      return;
-    }
+  if (pointInCircle(mouseX, mouseY, sx(p.blendNormalCx), sy(p.blendNormalCy), 12) ||
+      pointInRect(mouseX, mouseY, sx(p.blendNormalTx), sy(p.blendNormalTy - 12), 90, 20)) {
+    blendModeName = "Normal";
+    return;
+  }
 
-    if (pointInCircle(mouseX, mouseY, sx(42), sy(startY + 354), ss(10))) {
-      blendModeName = "Normal";
-      return;
-    }
-    if (pointInCircle(mouseX, mouseY, sx(42), sy(startY + 380), ss(10))) {
-      blendModeName = "Screen";
-      return;
-    }
+  if (pointInCircle(mouseX, mouseY, sx(p.blendScreenCx), sy(p.blendScreenCy), 12) ||
+      pointInRect(mouseX, mouseY, sx(p.blendScreenTx), sy(p.blendScreenTy - 12), 90, 20)) {
+    blendModeName = "Screen";
+    return;
+  }
 
-    if (pointInRect(mouseX, mouseY, sx(60), sy(startY + 344), ss(70), ss(22))) {
-      blendModeName = "Normal";
-      return;
-    }
-    if (pointInRect(mouseX, mouseY, sx(60), sy(startY + 370), ss(70), ss(22))) {
-      blendModeName = "Screen";
-      return;
-    }
-
-    if (pointInRect(mouseX, mouseY, sx(40), sy(startY + 430), ss(120), ss(34))) {
-      exportSVG();
-      return;
-    }
-  } else {
-    if (pointInCircle(mouseX, mouseY, sx(42.52), sy(790.1155), ss(10))) {
-      autoMotionOn = true;
-      applyAxesToParams();
-      return;
-    }
-    if (pointInCircle(mouseX, mouseY, sx(42.52), sy(814.1689), ss(10))) {
-      autoMotionOn = false;
-      applyAxesToParams();
-      return;
-    }
-
-    if (pointInRect(mouseX, mouseY, sx(57.7498), sy(782), ss(36), ss(18))) {
-      autoMotionOn = true;
-      applyAxesToParams();
-      return;
-    }
-    if (pointInRect(mouseX, mouseY, sx(57.7498), sy(806), ss(40), ss(18))) {
-      autoMotionOn = false;
-      applyAxesToParams();
-      return;
-    }
-
-    if (pointInCircle(mouseX, mouseY, sx(42.52), sy(874.8965), ss(10))) {
-      blendModeName = "Normal";
-      return;
-    }
-    if (pointInCircle(mouseX, mouseY, sx(42.52), sy(898.3548), ss(10))) {
-      blendModeName = "Screen";
-      return;
-    }
-
-    if (pointInRect(mouseX, mouseY, sx(57.7498), sy(866), ss(56), ss(18))) {
-      blendModeName = "Normal";
-      return;
-    }
-    if (pointInRect(mouseX, mouseY, sx(57.7498), sy(890), ss(60), ss(18))) {
-      blendModeName = "Screen";
-      return;
-    }
-
-    if (pointInRect(mouseX, mouseY, sx(35.702), sy(972.2339), ss(95.0218), ss(30.5844))) {
-      exportSVG();
-      return;
-    }
+  if (pointInRect(mouseX, mouseY, sx(p.saveX), sy(p.saveY), ss(p.saveW), ss(p.saveH))) {
+    exportSVG();
+    return;
   }
 }
 
 function mouseDragged() {
-  if (draggingSliderKey) {
-    updateSliderByMouse(draggingSliderKey, mouseX);
-  }
+  if (draggingSliderKey) updateSliderByMouse(draggingSliderKey, mouseX);
 }
 
 function mouseReleased() {
@@ -1344,32 +1335,25 @@ function mouseReleased() {
 
 function handleColorClick(group) {
   const items = getColorItems(group);
+  const hitR = isMobileLayout() ? 10 : 9;
 
   for (const item of items) {
-    if (pointInCircle(mouseX, mouseY, sx(item.x), sy(item.y), ss(9))) {
-      if (group === "type") {
-        typeColorMode = item.mode;
-      } else {
-        bgMode = item.mode;
-      }
+    if (pointInCircle(mouseX, mouseY, sx(item.x), sy(item.y), hitR)) {
+      if (group === "type") typeColorMode = item.mode;
+      else bgMode = item.mode;
       return true;
     }
   }
-
   return false;
 }
 
 function updateSliderByMouse(key, mx) {
+  const p = getPanelLayout();
+
   if (key === "size") {
-    if (isMobileLayout()) {
-      let v = map(mx, sx(40), sx(40 + 260), 60, 1200);
-      textSizeVal = constrain(v, 60, 1200);
-    } else {
-      let v = map(mx, sx(35.6415), sx(35.6415 + 143.4212), 60, 1200);
-      textSizeVal = constrain(v, 60, 1200);
-    }
+    let v = map(mx, sx(p.sizeSliderX), sx(p.sizeSliderX + p.sizeSliderW), 60, 1200);
+    textSizeVal = constrain(v, 60, 1200);
     applyAxesToParams();
-    buildAllText();
     return;
   }
 
@@ -1404,8 +1388,8 @@ function exportSVG() {
 }
 
 function buildSVGString() {
-  const w = DESIGN_W;
-  const h = DESIGN_H;
+  const w = isMobileLayout() ? width : DESIGN_W;
+  const h = isMobileLayout() ? height : DESIGN_H;
   const bg = getCurrentBgColor();
 
   let parts = [];
