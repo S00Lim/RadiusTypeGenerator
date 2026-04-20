@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Radius Bar Custom Generator - Screen UI with Dryness Logic</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
       --bg: #8b1512;
@@ -903,11 +904,24 @@ step = floor(lerp(40, 4, dryN));
       const luminance = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
       return luminance > 0.72;
     }
+async function exportSVG() {
+  const target = document.getElementById('app');
 
-    function exportSVG() {
-      const svgText = buildSVGString();
-      downloadTextAsFile(svgText, 'radius_generator_dryness_left_ui.svg', 'image/svg+xml;charset=utf-8');
-    }
+  try {
+    const canvasCapture = await html2canvas(target, {
+      backgroundColor: null,
+      useCORS: true,
+      scale: 2
+    });
+
+    const link = document.createElement('a');
+    link.download = 'radius_generator_full_ui.png';
+    link.href = canvasCapture.toDataURL('image/png');
+    link.click();
+  } catch (err) {
+    console.error('Save failed:', err);
+  }
+}
 
     function buildSVGString() {
       const w = width;
