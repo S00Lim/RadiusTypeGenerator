@@ -1029,8 +1029,8 @@ step = floor(lerp(40, 4, dryN));
     }
 
     function buildBlockText() {
-      // On mobile, reduce size so the glyph fits comfortably in the canvas area
-      const fontSize = (isMobile && isMobile()) ? Math.round(state.size * 0.38) : state.size;
+      // Always use full state.size — mobile scaling is handled via scale() in renderScene
+      const fontSize = state.size;
       const lines = state.text.toUpperCase().split('\n');
       const allCenters = [];
       let glyphCounter = 0;
@@ -1128,7 +1128,7 @@ step = floor(lerp(40, 4, dryN));
 
       const centerX = width * 0.51;
       // On mobile: shift type downward to sit in lower portion of canvas
-      const centerY = (isMobile && isMobile()) ? height * 0.50 : height * 0.51;
+      const centerY = height * 0.51;
       
       const dx = centerX - (minX + maxX) / 2;
       const dy = centerY - (minY + maxY) / 2;
@@ -1155,7 +1155,18 @@ step = floor(lerp(40, 4, dryN));
       if (state.blend === 'screen') modeConst = SCREEN;
       blendMode(modeConst);
 
-      for (let c of centers) drawRipple(c, 1);
+      // On mobile: scale the entire scene down uniformly so shape is identical to desktop
+      if (isMobile()) {
+        const s = 0.42;
+        push();
+        translate(width * 0.5, height * 0.5);
+        scale(s);
+        translate(-width * 0.5, -height * 0.5);
+        for (let c of centers) drawRipple(c, 1);
+        pop();
+      } else {
+        for (let c of centers) drawRipple(c, 1);
+      }
     }
 
     function drawRipple(pt, progress) {
