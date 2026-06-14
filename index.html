@@ -253,141 +253,148 @@
         --top-y: 16px;
       }
 
-      .left-column {
-        gap: 22px;
-      }
-
-      .block-title {
-        font-size: 14px;
-      }
-
-      .subrow,
-      .radio-item {
-        font-size: 14px;
-      }
-
-      .text-input {
-        font-size: 20px;
-      }
+      .left-column { gap: 22px; }
+      .block-title { font-size: 14px; }
+      .subrow, .radio-item { font-size: 14px; }
+      .text-input { font-size: 20px; }
     }
 
-    /* ── Mobile: bottom drawer layout ── */
+    /* ── Mobile: full-screen single-page layout ── */
     @media (max-width: 600px) {
-      :root {
-        --control-w: calc(100vw - 48px);
-        --drawer-peek: 60px;
+      html, body {
+        overflow: hidden;
       }
 
-      /* hide the overlay layer – drawer sits outside it */
-      #uiLayer {
-        display: none;
-      }
-
-      /* drawer container */
-      #mobileDrawer {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 100;
-        background: var(--bg);
-        border-radius: 18px 18px 0 0;
-        box-shadow: 0 -4px 32px rgba(0,0,0,0.45);
-        transform: translateY(calc(100% - var(--drawer-peek)));
-        transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
-        /* full height minus a tiny bit so canvas is still visible */
-        max-height: 88vh;
+      #app {
         display: flex;
         flex-direction: column;
+        width: 100vw;
+        height: 100dvh; /* dynamic viewport height for mobile browsers */
+        position: relative;
       }
 
-      #mobileDrawer.open {
-        transform: translateY(0);
+      /* Canvas fills top portion */
+      #canvasWrap {
+        position: relative;
+        flex: 1 1 0;
+        min-height: 0;
+        overflow: hidden;
+        /* overlay tap hint */
+        cursor: text;
       }
 
-      /* drag handle bar */
-      .drawer-handle {
+      /* Hidden tap overlay on canvas to trigger text input */
+      #canvasTapArea {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        background: transparent;
+      }
+
+      /* Desktop UI hidden on mobile */
+      #uiLayer {
+        display: none !important;
+      }
+
+      /* Mobile controls panel - fixed height at bottom */
+      #mobilePanel {
         flex: 0 0 auto;
+        background: var(--bg);
+        padding: 16px 20px 20px;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        height: var(--drawer-peek);
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      /* 2-column grid for the 4 sliders */
+      .mobile-slider-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 20px;
+      }
+
+      .mobile-slider-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .mobile-label-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: var(--fg);
+        opacity: 0.9;
+      }
+
+      .mobile-range-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--fg);
+        opacity: 0.55;
+        margin-top: 1px;
+      }
+
+      /* Range sliders - bigger touch target */
+      .mobile-slider-cell input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 18px;
+        border-radius: 999px;
+        background: var(--slider-track);
+        outline: none;
+        border: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .mobile-slider-cell input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--fg);
         cursor: pointer;
-        touch-action: none;
-        user-select: none;
-        -webkit-user-select: none;
+        border: none;
       }
 
-      .drawer-handle::before {
-        content: "";
-        display: block;
-        width: 36px;
-        height: 4px;
-        border-radius: 2px;
-        background: rgba(255,255,255,0.4);
+      .mobile-slider-cell input[type="range"]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--fg);
+        cursor: pointer;
+        border: none;
       }
 
-      /* scrollable controls inside drawer */
-      .drawer-scroll {
-        flex: 1 1 auto;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding: 0 24px 32px;
+      /* Disabled dryness */
+      .mobile-slider-cell input[type="range"].derived-slider::-webkit-slider-thumb {
+        background: #b5b5b5;
       }
 
-      .left-column {
-        position: static;
-        width: 100%;
-        gap: 24px;
-      }
-
-      .control-block,
-      .subrow,
-      input[type="range"],
-      .text-input {
-        width: 100%;
-      }
-
-      /* bigger touch targets for sliders on mobile */
-      input[type="range"] {
-        height: 20px;
-      }
-
-      input[type="range"]::-webkit-slider-thumb {
-        width: 20px;
-        height: 20px;
-      }
-
-      input[type="range"]::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-      }
-
-      .block-title {
-        font-size: 13px;
-        letter-spacing: 0.06em;
-        opacity: 0.7;
-        margin-bottom: 2px;
-      }
-
-      .text-input {
-        font-size: 24px;
-      }
-
-      .buttons {
-        flex-direction: row;
-        gap: 12px;
-      }
-
-      .pill-btn {
-        flex: 1;
+      /* Hidden text input (keyboard trigger) */
+      #mobileTextInput {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        pointer-events: none;
+        top: 0;
+        left: 0;
       }
     }
   </style>
 </head>
 <body>
   <div id="app">
-    <div id="canvasWrap"></div>
+    <div id="canvasWrap">
+      <!-- invisible overlay: tap on canvas → focus hidden input → keyboard opens -->
+      <div id="canvasTapArea"></div>
+    </div>
 
     <div id="uiLayer">
       <div class="left-column">
@@ -471,11 +478,47 @@
     </div>
   </div>
 
-  <!-- Mobile bottom drawer (only active on small screens via CSS) -->
-  <div id="mobileDrawer">
-    <div class="drawer-handle" id="drawerHandle"></div>
-    <div class="drawer-scroll">
-      <div class="left-column" id="mobileControls"></div>
+  <!-- Mobile-only bottom panel (hidden on desktop via CSS) -->
+  <div id="mobilePanel">
+    <!-- Hidden input to trigger keyboard; value synced to state.text -->
+    <input id="mobileTextInput" type="text" maxlength="1" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
+
+    <div class="mobile-slider-grid">
+      <div class="mobile-slider-cell">
+        <div class="mobile-label-row">
+          <span id="mBodyLabel">BODY</span>
+          <span id="mBodyVal">53</span>
+        </div>
+        <input id="mBodyRange" type="range" min="0" max="100" value="53" />
+        <div class="mobile-range-labels"><span>Light</span><span>Bold</span></div>
+      </div>
+
+      <div class="mobile-slider-cell">
+        <div class="mobile-label-row">
+          <span id="mAcidLabel">ACIDITY</span>
+          <span id="mAcidVal">27</span>
+        </div>
+        <input id="mAcidRange" type="range" min="0" max="100" value="27" />
+        <div class="mobile-range-labels"><span>Soft</span><span>Crisp</span></div>
+      </div>
+
+      <div class="mobile-slider-cell">
+        <div class="mobile-label-row">
+          <span id="mTanninLabel">TANNIN</span>
+          <span id="mTanninVal">55</span>
+        </div>
+        <input id="mTanninRange" type="range" min="0" max="100" value="55" />
+        <div class="mobile-range-labels"><span>Smooth</span><span>Gritty</span></div>
+      </div>
+
+      <div class="mobile-slider-cell">
+        <div class="mobile-label-row">
+          <span id="mDrynessLabel">DRYNESS</span>
+          <span id="mDrynessVal">50</span>
+        </div>
+        <input id="mDrynessRange" type="range" min="0" max="100" value="50" class="derived-slider" disabled />
+        <div class="mobile-range-labels"><span>Open</span><span>Tight</span></div>
+      </div>
     </div>
   </div>
 
@@ -543,13 +586,33 @@
       font = loadFont('Montserrat-VariableFont_wght.ttf');
     }
 
+    function isMobile() { return window.innerWidth <= 600; }
+
+    function getCanvasSize() {
+      if (isMobile()) {
+        const wrap = document.getElementById('canvasWrap');
+        return { w: wrap.offsetWidth, h: wrap.offsetHeight };
+      }
+      return { w: windowWidth, h: windowHeight };
+    }
+
     function setup() {
-      canvas = createCanvas(windowWidth, windowHeight);
+      const sz = getCanvasSize();
+      canvas = createCanvas(sz.w, sz.h);
       canvas.parent('canvasWrap');
       canvas.position(0, 0);
       canvas.style('display', 'block');
       setupUI();
+      setupMobileUI();
       recalcAll();
+      // On mobile, panel height is known after first render — resize canvas
+      if (isMobile()) {
+        setTimeout(() => {
+          const sz2 = getCanvasSize();
+          resizeCanvas(sz2.w, sz2.h);
+          buildAllText();
+        }, 50);
+      }
     }
 
     function draw() {
@@ -714,9 +777,74 @@
       ui.drynessLabel.textContent = `DRYNESS: ${state.dryness}`;
       ui.drynessRange.value = state.dryness;
 
+      // Sync mobile labels
+      const mBodyVal = document.getElementById('mBodyVal');
+      const mAcidVal = document.getElementById('mAcidVal');
+      const mTanninVal = document.getElementById('mTanninVal');
+      const mDrynessVal = document.getElementById('mDrynessVal');
+      const mDrynessRange = document.getElementById('mDrynessRange');
+      if (mBodyVal) mBodyVal.textContent = state.body;
+      if (mAcidVal) mAcidVal.textContent = state.acidity;
+      if (mTanninVal) mTanninVal.textContent = state.tannin;
+      if (mDrynessVal) mDrynessVal.textContent = state.dryness;
+      if (mDrynessRange) mDrynessRange.value = state.dryness;
+
       document.documentElement.style.setProperty('--bg', getBackgroundHex());
       document.documentElement.style.setProperty('--fg', needsDarkForeground() ? '#000' : '#fff');
       document.documentElement.style.setProperty('--slider-track', needsDarkForeground() ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.18)');
+    }
+
+    function setupMobileUI() {
+      if (!isMobile()) return;
+
+      const mBodyRange   = document.getElementById('mBodyRange');
+      const mAcidRange   = document.getElementById('mAcidRange');
+      const mTanninRange = document.getElementById('mTanninRange');
+      const mTextInput   = document.getElementById('mobileTextInput');
+      const tapArea      = document.getElementById('canvasTapArea');
+
+      mBodyRange.addEventListener('input', () => {
+        state.body = Number(mBodyRange.value);
+        recalcAll();
+      });
+
+      mAcidRange.addEventListener('input', () => {
+        state.acidity = Number(mAcidRange.value);
+        recalcAll();
+      });
+
+      mTanninRange.addEventListener('input', () => {
+        state.tannin = Number(mTanninRange.value);
+        recalcAll();
+      });
+
+      // Tap on canvas → focus hidden input → keyboard opens
+      tapArea.addEventListener('click', () => {
+        mTextInput.style.opacity = '0';
+        mTextInput.style.pointerEvents = 'auto';
+        mTextInput.focus();
+      });
+
+      mTextInput.addEventListener('input', () => {
+        const raw = mTextInput.value.toUpperCase().replace(/[^A-Z]/g, '');
+        const cleaned = raw.slice(-1);
+        state.text = cleaned || state.text;
+        mTextInput.value = '';
+        recalcAll();
+      });
+
+      mTextInput.addEventListener('keydown', (e) => {
+        if (/^[a-zA-Z]$/.test(e.key)) {
+          e.preventDefault();
+          state.text = e.key.toUpperCase();
+          mTextInput.value = '';
+          recalcAll();
+        }
+      });
+
+      mTextInput.addEventListener('blur', () => {
+        mTextInput.style.pointerEvents = 'none';
+      });
     }
 
     function applyAxesToParams() {
@@ -1108,56 +1236,10 @@ step = floor(lerp(40, 4, dryN));
     }
 
     function windowResized() {
-      resizeCanvas(windowWidth, windowHeight);
+      const sz = getCanvasSize();
+      resizeCanvas(sz.w, sz.h);
       buildAllText();
     }
-
-    /* ── Mobile drawer logic ── */
-    (function () {
-      function isMobile() { return window.innerWidth <= 600; }
-
-      function initMobileDrawer() {
-        if (!isMobile()) return;
-
-        const desktopCol = document.querySelector('#uiLayer .left-column');
-        const mobileCol  = document.getElementById('mobileControls');
-        const drawer     = document.getElementById('mobileDrawer');
-        const handle     = document.getElementById('drawerHandle');
-
-        // Move controls into mobile drawer so JS listeners keep working
-        if (desktopCol && mobileCol && !mobileCol.hasChildNodes()) {
-          while (desktopCol.firstChild) {
-            mobileCol.appendChild(desktopCol.firstChild);
-          }
-        }
-
-        // Toggle on handle tap
-        handle.addEventListener('click', () => {
-          drawer.classList.toggle('open');
-        });
-
-        // Swipe up/down gesture
-        let startY = 0;
-        handle.addEventListener('touchstart', e => {
-          startY = e.touches[0].clientY;
-        }, { passive: true });
-
-        handle.addEventListener('touchend', e => {
-          const dy = e.changedTouches[0].clientY - startY;
-          if (dy < -30) drawer.classList.add('open');
-          if (dy >  30) drawer.classList.remove('open');
-        }, { passive: true });
-
-        // Tap canvas to close drawer
-        document.getElementById('canvasWrap').addEventListener('click', () => {
-          drawer.classList.remove('open');
-        });
-      }
-
-      window.addEventListener('load', () => {
-        setTimeout(initMobileDrawer, 200);
-      });
-    })();
   </script>
 </body>
 </html>
