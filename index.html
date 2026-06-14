@@ -260,9 +260,13 @@
     }
 
     /* ── Mobile: full-screen single-page layout ── */
+    #mobilePanel {
+      display: none; /* shown only inside @media mobile block */
+    }
+
     @media (max-width: 600px) {
       :root {
-        --panel-h: 180px; /* fixed panel height — JS reads this exact value */
+        --panel-h: 188px;
       }
 
       html, body {
@@ -270,24 +274,22 @@
       }
 
       #app {
-        position: fixed;   /* fixed avoids iOS scroll bounce messing up vh */
+        position: fixed;
         inset: 0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
       }
 
-      /* Canvas area: full width, height = 100% minus panel */
+      /* Canvas on top, exact height = viewport minus panel */
       #canvasWrap {
         position: relative;
         width: 100%;
         height: calc(100% - var(--panel-h));
+        flex: none;
         overflow: hidden;
         cursor: text;
-        flex: none;  /* don't flex — explicit height */
       }
-
-      /* DO NOT override canvas width/height here — p5 sets exact px, CSS scaling = distortion */
 
       /* Hidden tap overlay */
       #canvasTapArea {
@@ -302,19 +304,97 @@
         display: none !important;
       }
 
-      /* Mobile controls panel - exact fixed height matching --panel-h */
+      /* Panel fixed at bottom */
       #mobilePanel {
+        display: flex;
         position: relative;
         width: 100%;
         height: var(--panel-h);
         flex: none;
         background: var(--bg);
-        padding: 12px 20px 16px;
+        padding: 14px 20px 18px;
         display: flex;
         flex-direction: column;
         gap: 10px;
         box-sizing: border-box;
+        border-top: 1px solid rgba(255,255,255,0.1);
       }
+
+      /* 2-column grid for the 4 sliders */
+      .mobile-slider-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px 24px;
+      }
+
+      .mobile-slider-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .mobile-label-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: var(--fg);
+        opacity: 0.9;
+      }
+
+      .mobile-range-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--fg);
+        opacity: 0.5;
+        margin-top: 1px;
+      }
+
+      /* Sliders — proper touch target */
+      .mobile-slider-cell input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 18px;
+        border-radius: 999px;
+        background: var(--slider-track);
+        outline: none;
+        border: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .mobile-slider-cell input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--fg);
+        cursor: pointer;
+        border: none;
+      }
+
+      .mobile-slider-cell input[type="range"]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--fg);
+        cursor: pointer;
+        border: none;
+      }
+
+      /* Hidden keyboard trigger input */
+      #mobileTextInput {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        pointer-events: none;
+        top: 0; left: 0;
+      }
+    }
 
       /* 2-column grid for the 4 sliders */
       .mobile-slider-grid {
@@ -486,48 +566,47 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Mobile-only bottom panel (hidden on desktop via CSS) -->
-  <div id="mobilePanel">
-    <!-- Hidden input to trigger keyboard; value synced to state.text -->
-    <input id="mobileTextInput" type="text" maxlength="1" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
+    <!-- Mobile-only bottom panel — inside #app so it participates in flex column layout -->
+    <div id="mobilePanel">
+      <input id="mobileTextInput" type="text" maxlength="1" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" />
 
-    <div class="mobile-slider-grid">
-      <div class="mobile-slider-cell">
-        <div class="mobile-label-row">
-          <span id="mBodyLabel">BODY</span>
-          <span id="mBodyVal">53</span>
+      <div class="mobile-slider-grid">
+        <div class="mobile-slider-cell">
+          <div class="mobile-label-row">
+            <span>BODY</span>
+            <span id="mBodyVal">53</span>
+          </div>
+          <input id="mBodyRange" type="range" min="0" max="100" value="53" />
+          <div class="mobile-range-labels"><span>Light</span><span>Bold</span></div>
         </div>
-        <input id="mBodyRange" type="range" min="0" max="100" value="53" />
-        <div class="mobile-range-labels"><span>Light</span><span>Bold</span></div>
-      </div>
 
-      <div class="mobile-slider-cell">
-        <div class="mobile-label-row">
-          <span id="mAcidLabel">ACIDITY</span>
-          <span id="mAcidVal">27</span>
+        <div class="mobile-slider-cell">
+          <div class="mobile-label-row">
+            <span>ACIDITY</span>
+            <span id="mAcidVal">27</span>
+          </div>
+          <input id="mAcidRange" type="range" min="0" max="100" value="27" />
+          <div class="mobile-range-labels"><span>Soft</span><span>Crisp</span></div>
         </div>
-        <input id="mAcidRange" type="range" min="0" max="100" value="27" />
-        <div class="mobile-range-labels"><span>Soft</span><span>Crisp</span></div>
-      </div>
 
-      <div class="mobile-slider-cell">
-        <div class="mobile-label-row">
-          <span id="mTanninLabel">TANNIN</span>
-          <span id="mTanninVal">55</span>
+        <div class="mobile-slider-cell">
+          <div class="mobile-label-row">
+            <span>TANNIN</span>
+            <span id="mTanninVal">55</span>
+          </div>
+          <input id="mTanninRange" type="range" min="0" max="100" value="55" />
+          <div class="mobile-range-labels"><span>Smooth</span><span>Gritty</span></div>
         </div>
-        <input id="mTanninRange" type="range" min="0" max="100" value="55" />
-        <div class="mobile-range-labels"><span>Smooth</span><span>Gritty</span></div>
-      </div>
 
-      <div class="mobile-slider-cell">
-        <div class="mobile-label-row">
-          <span id="mDrynessLabel">DRYNESS</span>
-          <span id="mDrynessVal">50</span>
+        <div class="mobile-slider-cell">
+          <div class="mobile-label-row">
+            <span>DRYNESS</span>
+            <span id="mDrynessVal">50</span>
+          </div>
+          <input id="mDrynessRange" type="range" min="0" max="100" value="50" />
+          <div class="mobile-range-labels"><span>Open</span><span>Tight</span></div>
         </div>
-        <input id="mDrynessRange" type="range" min="0" max="100" value="50" class="derived-slider" disabled />
-        <div class="mobile-range-labels"><span>Open</span><span>Tight</span></div>
       </div>
     </div>
   </div>
@@ -829,6 +908,12 @@
         recalcAll();
       });
 
+      const mDrynessRange = document.getElementById('mDrynessRange');
+      mDrynessRange.addEventListener('input', () => {
+        state.dryness = Number(mDrynessRange.value);
+        recalcAll();
+      });
+
       // Tap on canvas → focus hidden input → keyboard opens
       tapArea.addEventListener('click', () => {
         mTextInput.style.opacity = '0';
@@ -946,7 +1031,8 @@ step = floor(lerp(40, 4, dryN));
     }
 
     function buildBlockText() {
-      const fontSize = state.size;
+      // On mobile, reduce size so the glyph fits comfortably in the canvas area
+      const fontSize = (isMobile && isMobile()) ? Math.round(state.size * 0.55) : state.size;
       const lines = state.text.toUpperCase().split('\n');
       const allCenters = [];
       let glyphCounter = 0;
@@ -1043,7 +1129,8 @@ step = floor(lerp(40, 4, dryN));
       }
 
       const centerX = width * 0.51;
-      const centerY = height * 0.51;
+      // On mobile: shift type upward so it sits in upper portion of canvas
+      const centerY = (isMobile && isMobile()) ? height * 0.40 : height * 0.51;
       
       const dx = centerX - (minX + maxX) / 2;
       const dy = centerY - (minY + maxY) / 2;
