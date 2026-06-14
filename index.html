@@ -461,10 +461,8 @@
         border: none;
       }
 
-      /* Disabled dryness */
-      .mobile-slider-cell input[type="range"].derived-slider::-webkit-slider-thumb {
-        background: #b5b5b5;
-      }
+      /* Disabled dryness — now enabled, remove grey override */
+      /* (kept selector in case it's used elsewhere but cleared) */
 
       /* Hidden text input (keyboard trigger) */
       #mobileTextInput {
@@ -1032,7 +1030,7 @@ step = floor(lerp(40, 4, dryN));
 
     function buildBlockText() {
       // On mobile, reduce size so the glyph fits comfortably in the canvas area
-      const fontSize = (isMobile && isMobile()) ? Math.round(state.size * 0.55) : state.size;
+      const fontSize = (isMobile && isMobile()) ? Math.round(state.size * 0.38) : state.size;
       const lines = state.text.toUpperCase().split('\n');
       const allCenters = [];
       let glyphCounter = 0;
@@ -1129,8 +1127,8 @@ step = floor(lerp(40, 4, dryN));
       }
 
       const centerX = width * 0.51;
-      // On mobile: shift type upward so it sits in upper portion of canvas
-      const centerY = (isMobile && isMobile()) ? height * 0.40 : height * 0.51;
+      // On mobile: shift type downward to sit in lower portion of canvas
+      const centerY = (isMobile && isMobile()) ? height * 0.62 : height * 0.51;
       
       const dx = centerX - (minX + maxX) / 2;
       const dy = centerY - (minY + maxY) / 2;
