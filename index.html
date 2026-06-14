@@ -270,6 +270,119 @@
         font-size: 20px;
       }
     }
+
+    /* ── Mobile: bottom drawer layout ── */
+    @media (max-width: 600px) {
+      :root {
+        --control-w: calc(100vw - 48px);
+        --drawer-peek: 60px;
+      }
+
+      /* hide the overlay layer – drawer sits outside it */
+      #uiLayer {
+        display: none;
+      }
+
+      /* drawer container */
+      #mobileDrawer {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+        background: var(--bg);
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -4px 32px rgba(0,0,0,0.45);
+        transform: translateY(calc(100% - var(--drawer-peek)));
+        transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+        /* full height minus a tiny bit so canvas is still visible */
+        max-height: 88vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #mobileDrawer.open {
+        transform: translateY(0);
+      }
+
+      /* drag handle bar */
+      .drawer-handle {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: var(--drawer-peek);
+        cursor: pointer;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .drawer-handle::before {
+        content: "";
+        display: block;
+        width: 36px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255,255,255,0.4);
+      }
+
+      /* scrollable controls inside drawer */
+      .drawer-scroll {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 24px 32px;
+      }
+
+      .left-column {
+        position: static;
+        width: 100%;
+        gap: 24px;
+      }
+
+      .control-block,
+      .subrow,
+      input[type="range"],
+      .text-input {
+        width: 100%;
+      }
+
+      /* bigger touch targets for sliders on mobile */
+      input[type="range"] {
+        height: 20px;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        width: 20px;
+        height: 20px;
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+      }
+
+      .block-title {
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        opacity: 0.7;
+        margin-bottom: 2px;
+      }
+
+      .text-input {
+        font-size: 24px;
+      }
+
+      .buttons {
+        flex-direction: row;
+        gap: 12px;
+      }
+
+      .pill-btn {
+        flex: 1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -355,6 +468,14 @@
           <button id="saveBtn" class="pill-btn">SAVE</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Mobile bottom drawer (only active on small screens via CSS) -->
+  <div id="mobileDrawer">
+    <div class="drawer-handle" id="drawerHandle"></div>
+    <div class="drawer-scroll">
+      <div class="left-column" id="mobileControls"></div>
     </div>
   </div>
 
@@ -990,6 +1111,53 @@ step = floor(lerp(40, 4, dryN));
       resizeCanvas(windowWidth, windowHeight);
       buildAllText();
     }
+
+    /* ── Mobile drawer logic ── */
+    (function () {
+      function isMobile() { return window.innerWidth <= 600; }
+
+      function initMobileDrawer() {
+        if (!isMobile()) return;
+
+        const desktopCol = document.querySelector('#uiLayer .left-column');
+        const mobileCol  = document.getElementById('mobileControls');
+        const drawer     = document.getElementById('mobileDrawer');
+        const handle     = document.getElementById('drawerHandle');
+
+        // Move controls into mobile drawer so JS listeners keep working
+        if (desktopCol && mobileCol && !mobileCol.hasChildNodes()) {
+          while (desktopCol.firstChild) {
+            mobileCol.appendChild(desktopCol.firstChild);
+          }
+        }
+
+        // Toggle on handle tap
+        handle.addEventListener('click', () => {
+          drawer.classList.toggle('open');
+        });
+
+        // Swipe up/down gesture
+        let startY = 0;
+        handle.addEventListener('touchstart', e => {
+          startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        handle.addEventListener('touchend', e => {
+          const dy = e.changedTouches[0].clientY - startY;
+          if (dy < -30) drawer.classList.add('open');
+          if (dy >  30) drawer.classList.remove('open');
+        }, { passive: true });
+
+        // Tap canvas to close drawer
+        document.getElementById('canvasWrap').addEventListener('click', () => {
+          drawer.classList.remove('open');
+        });
+      }
+
+      window.addEventListener('load', () => {
+        setTimeout(initMobileDrawer, 200);
+      });
+    })();
   </script>
 </body>
 </html>
