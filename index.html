@@ -261,39 +261,35 @@
 
     /* ── Mobile: full-screen single-page layout ── */
     @media (max-width: 600px) {
+      :root {
+        --panel-h: 180px; /* fixed panel height — JS reads this exact value */
+      }
+
       html, body {
         overflow: hidden;
       }
 
       #app {
+        position: fixed;   /* fixed avoids iOS scroll bounce messing up vh */
+        inset: 0;
         display: flex;
         flex-direction: column;
-        width: 100vw;
-        height: 100vh;           /* fallback */
-        height: 100dvh;          /* dynamic viewport — hides/shows browser chrome */
-        position: relative;
         overflow: hidden;
       }
 
-      /* Canvas fills top portion - use calc to guarantee correct height */
+      /* Canvas area: full width, height = 100% minus panel */
       #canvasWrap {
         position: relative;
-        flex: 1 1 0;
-        min-height: 0;
+        width: 100%;
+        height: calc(100% - var(--panel-h));
         overflow: hidden;
         cursor: text;
+        flex: none;  /* don't flex — explicit height */
       }
 
-      /* p5 canvas must fill its parent exactly */
-      #canvasWrap canvas {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-      }
+      /* DO NOT override canvas width/height here — p5 sets exact px, CSS scaling = distortion */
 
-      /* Hidden tap overlay on canvas to trigger text input */
+      /* Hidden tap overlay */
       #canvasTapArea {
         position: absolute;
         inset: 0;
@@ -306,14 +302,18 @@
         display: none !important;
       }
 
-      /* Mobile controls panel - explicit fixed height so canvasWrap knows its space */
+      /* Mobile controls panel - exact fixed height matching --panel-h */
       #mobilePanel {
-        flex: 0 0 auto;
+        position: relative;
+        width: 100%;
+        height: var(--panel-h);
+        flex: none;
         background: var(--bg);
-        padding: 14px 20px env(safe-area-inset-bottom, 16px);
+        padding: 12px 20px 16px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
+        box-sizing: border-box;
       }
 
       /* 2-column grid for the 4 sliders */
@@ -598,10 +598,15 @@
 
     function isMobile() { return window.innerWidth <= 600; }
 
+    // Reads --panel-h CSS variable (set in :root for mobile) to compute exact canvas height
+    function getMobilePanelH() {
+      const raw = getComputedStyle(document.documentElement).getPropertyValue('--panel-h').trim();
+      return parseInt(raw, 10) || 180;
+    }
+
     function getCanvasSize() {
       if (isMobile()) {
-        const panel = document.getElementById('mobilePanel');
-        const panelH = panel ? panel.getBoundingClientRect().height : 0;
+        const panelH = getMobilePanelH();
         return {
           w: window.innerWidth,
           h: window.innerHeight - panelH
@@ -619,19 +624,6 @@
       setupUI();
       setupMobileUI();
       recalcAll();
-      // On mobile, panel renders after setup — wait for it then resize canvas
-      if (isMobile()) {
-        setTimeout(() => {
-          const sz2 = getCanvasSize();
-          resizeCanvas(sz2.w, sz2.h);
-          buildAllText();
-        }, 100);
-        setTimeout(() => {
-          const sz3 = getCanvasSize();
-          resizeCanvas(sz3.w, sz3.h);
-          buildAllText();
-        }, 400);
-      }
     }
 
     function draw() {
